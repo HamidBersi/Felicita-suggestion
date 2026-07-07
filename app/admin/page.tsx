@@ -18,9 +18,19 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, ChevronDown, Eye, GripVertical, Plus } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Eye,
+  GripVertical,
+  LogOut,
+  Monitor,
+  Plus,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { AdminGate, useAdminLogout } from "@/components/admin/admin-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +40,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import {
   saveSuggestions,
@@ -399,12 +410,13 @@ function SortableList({
   );
 }
 
-export default function AdminPage() {
+function AdminPanel() {
+  const logout = useAdminLogout();
   const [suggestions, setSuggestions] = useState<SuggestionRow[]>([
     createInitialRow(),
   ]);
   const [preview, setPreview] = useState<SuggestionRow[]>([]);
-  const [savedMessage, setSavedMessage] = useState("");
+  const [hasStoredSuggestions, setHasStoredSuggestions] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Charge localStorage puis active le drag and drop côté client
@@ -412,6 +424,7 @@ export default function AdminPage() {
     const stored = loadSuggestions();
     if (stored) {
       setSuggestions(stored.map(storedToRow));
+      setHasStoredSuggestions(true);
     }
     setMounted(true);
   }, []);
@@ -468,27 +481,59 @@ export default function AdminPage() {
         labelColor,
       }));
 
-    saveSuggestions(suggestionsToSave);
-    console.log("Suggestions sauvegardées :", suggestionsToSave);
-    setSavedMessage("Suggestions enregistrées");
+    try {
+      saveSuggestions(suggestionsToSave);
+      console.log("Suggestions sauvegardées :", suggestionsToSave);
+      setHasStoredSuggestions(suggestionsToSave.length > 0);
+      toast.success("Suggestions enregistrées avec succès");
+    } catch {
+      toast.error("Erreur lors de l'enregistrement");
+    }
   }
 
   return (
     <div className="min-h-full bg-gradient-to-b from-stone-100 to-stone-50 px-6 py-10 font-sans tracking-tight antialiased">
       <div className="mx-auto max-w-4xl space-y-8">
-        <header>
-          <Link
-            href="/display"
-            className="text-sm text-stone-500 underline-offset-4 hover:text-stone-800 hover:underline"
-          >
-            Voir l&apos;affichage
-          </Link>
-          <h1 className="mt-2 text-3xl font-bold text-stone-900">
-            Administration
-          </h1>
-          <p className="mt-2 text-stone-600">
-            Gérez les suggestions affichées au restaurant.
-          </p>
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-stone-900">Administration</h1>
+            <p className="mt-2 text-stone-600">
+              Gérez les suggestions affichées au restaurant.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {hasStoredSuggestions ? (
+              <Button
+                asChild
+                variant="outline"
+                className="h-10 shrink-0 rounded-full border-sky-200 bg-white px-5 font-semibold text-sky-900 shadow-sm hover:border-sky-300 hover:bg-sky-50"
+              >
+                <Link href="/display">
+                  <Monitor className="size-4" />
+                  Affichage
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                disabled
+                variant="outline"
+                className="h-10 shrink-0 rounded-full border-stone-200 bg-stone-100 px-5 font-semibold text-stone-400 shadow-sm"
+              >
+                <Monitor className="size-4" />
+                Affichage
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 shrink-0 rounded-full border-stone-200 bg-white px-5 font-semibold text-stone-700 shadow-sm hover:border-stone-300 hover:bg-stone-50"
+              onClick={logout}
+            >
+              <LogOut className="size-4" />
+              Déconnexion
+            </Button>
+          </div>
         </header>
 
         {/* Formulaire */}
@@ -544,11 +589,6 @@ export default function AdminPage() {
               <Check className="size-4" />
               Confirmer
             </Button>
-            {savedMessage && (
-              <p className="text-sm font-medium text-green-700">
-                {savedMessage}
-              </p>
-            )}
           </div>
         </section>
 
@@ -598,6 +638,15 @@ export default function AdminPage() {
           )}
         </section>
       </div>
+      <Toaster richColors position="top-center" />
     </div>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <AdminGate>
+      <AdminPanel />
+    </AdminGate>
   );
 }
