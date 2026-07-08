@@ -1,0 +1,25 @@
+(node:409906) ExperimentalWarning: Support for loading ES Module in require() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-0-eu-west-1.pooler.supabase.com:5432"
+
+Applying migration `20260708143340_init_suggestions_test`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260708143340_init_suggestions_test/
+    └─ migration.sql
+Applying migration `20260708150722_init_suggestions`
+
+
+The following migration(s) have been created and applied from new schema changes:
+
+prisma/migrations/
+  └─ 20260708150722_init_suggestions/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+
