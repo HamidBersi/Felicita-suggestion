@@ -42,12 +42,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  saveSuggestions,
-  loadSuggestions,
-  type LabelColor,
-  type Suggestion,
-} from "@/lib/suggestions-storage";
+
+type LabelColor = "orange" | "red" | "green";
+
+type ApiSuggestion = {
+  id: string;
+  title: string;
+  description: string | null;
+  price: string;
+  label: string | null;
+  labelColor: string;
+  position: number;
+  isActive: boolean;
+};
 
 type SuggestionRow = {
   id: string;
@@ -80,15 +87,18 @@ function createEmptyRow(): SuggestionRow {
   };
 }
 
-// Crée un id uniquement au chargement si l'item n'en a pas déjà un
-function storedToRow(stored: Suggestion): SuggestionRow {
+function isLabelColor(color: string): color is LabelColor {
+  return color === "orange" || color === "red" || color === "green";
+}
+
+function apiToRow(stored: ApiSuggestion): SuggestionRow {
   return {
-    id: stored.id ?? crypto.randomUUID(),
+    id: stored.id,
     title: stored.title,
-    description: stored.description,
+    description: stored.description ?? "",
     price: stored.price,
-    label: stored.label,
-    labelColor: stored.labelColor ?? "orange",
+    label: stored.label ?? "",
+    labelColor: isLabelColor(stored.labelColor) ? stored.labelColor : "orange",
   };
 }
 
@@ -419,14 +429,30 @@ function AdminPanel() {
   const [hasStoredSuggestions, setHasStoredSuggestions] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Charge localStorage puis active le drag and drop côté client
+  // Charge les suggestions actives puis active le drag and drop côté client
   useEffect(() => {
-    const stored = loadSuggestions();
-    if (stored) {
-      setSuggestions(stored.map(storedToRow));
-      setHasStoredSuggestions(true);
+    async function loadSuggestionsFromApi() {
+      try {
+        const response = await fetch("/api/suggestions");
+
+        if (!response.ok) {
+          return;
+        }
+
+        const stored = (await response.json()) as ApiSuggestion[];
+
+        if (stored.length > 0) {
+          setSuggestions(stored.map(apiToRow));
+          setHasStoredSuggestions(true);
+        }
+      } catch {
+        // Conserve la ligne vide par défaut en cas d'erreur réseau
+      } finally {
+        setMounted(true);
+      }
     }
-    setMounted(true);
+
+    void loadSuggestionsFromApi();
   }, []);
 
   function updateRow(id: string, field: keyof SuggestionRow, value: string) {
@@ -469,11 +495,10 @@ function AdminPanel() {
     setPreview(filledRows);
   }
 
-  function handleConfirm() {
-    const suggestionsToSave = suggestions
+  async function handleConfirm() {
+    const suggestionsPayload = suggestions
       .filter((row) => row.title.trim() !== "")
-      .map(({ id, title, description, price, label, labelColor }) => ({
-        id,
+      .map(({ title, description, price, label, labelColor }) => ({
         title,
         description,
         price,
@@ -482,10 +507,26 @@ function AdminPanel() {
       }));
 
     try {
-      saveSuggestions(suggestionsToSave);
-      console.log("Suggestions sauvegardées :", suggestionsToSave);
-      setHasStoredSuggestions(suggestionsToSave.length > 0);
-      toast.success("Suggestions enregistrées avec succès");
+      const response = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(suggestionsPayload),
+      });
+
+      if (!response.ok) {
+        toast.error("Erreur lors de l'enregistrement");
+        return;
+      }
+
+      const result = (await response.json()) as { success?: boolean };
+
+      if (result.success === true) {
+        setHasStoredSuggestions(suggestionsPayload.length > 0);
+        toast.success("Suggestions enregistrées avec succès");
+        return;
+      }
+
+      toast.error("Erreur lors de l'enregistrement");
     } catch {
       toast.error("Erreur lors de l'enregistrement");
     }

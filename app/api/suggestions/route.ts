@@ -1,43 +1,74 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type CreateSuggestionBody = {
+type SuggestionInput = {
   title?: string;
   description?: string;
   price?: string;
   label?: string;
   labelColor?: string;
   position?: number;
-  isActive?: boolean;
 };
 
-function parseCreateSuggestionBody(body: CreateSuggestionBody) {
-  const title = body.title?.trim();
-  const price = body.price?.trim();
+type SuggestionCreateData = {
+  title: string;
+  description: string | null;
+  price: string;
+  label: string | null;
+  labelColor: string;
+  position: number;
+  isActive: true;
+};
 
-  if (!title) {
-    return { error: "Le champ title est obligatoire." };
+const PRICE_PATTERN = /^\d+(?:[.,]\d{1,2})?$/;
+
+function isValidPrice(price: string): boolean {
+  return PRICE_PATTERN.test(price);
+}
+
+function validateSuggestionsBody(body: unknown):
+  | { error: string }
+  | { data: SuggestionCreateData[] } {
+  if (!Array.isArray(body)) {
+    return { error: "Le body doit être un tableau." };
   }
 
-  if (!price) {
-    return { error: "Le champ price est obligatoire." };
-  }
+  const data: SuggestionCreateData[] = [];
 
-  if (typeof body.position !== "number" || !Number.isInteger(body.position)) {
-    return { error: "Le champ position doit être un entier." };
-  }
+  for (let index = 0; index < body.length; index++) {
+    const item = body[index] as SuggestionInput;
 
-  return {
-    data: {
+    if (!item || typeof item !== "object") {
+      return { error: `Suggestion invalide à l'index ${index}.` };
+    }
+
+    const title = item.title?.trim();
+    const price = item.price?.trim();
+
+    if (!title) {
+      return { error: `Le champ title est obligatoire à l'index ${index}.` };
+    }
+
+    if (!price) {
+      return { error: `Le champ price est obligatoire à l'index ${index}.` };
+    }
+
+    if (!isValidPrice(price)) {
+      return { error: `Le champ price est invalide à l'index ${index}.` };
+    }
+
+    data.push({
       title,
       price,
-      position: body.position,
-      description: body.description?.trim() || null,
-      label: body.label?.trim() || null,
-      labelColor: body.labelColor?.trim() || "orange",
-      isActive: body.isActive ?? true,
-    },
-  };
+      description: item.description?.trim() || null,
+      label: item.label?.trim() || null,
+      labelColor: item.labelColor?.trim() || "orange",
+      position: index,
+      isActive: true,
+    });
+  }
+
+  return { data };
 }
 
 export async function GET() {
@@ -50,7 +81,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body: CreateSuggestionBody;
+  let body: unknown;
 
   try {
     body = await request.json();
@@ -61,18 +92,27 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = parseCreateSuggestionBody(body);
+  const parsed = validateSuggestionsBody(body);
 
   if ("error" in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
   try {
-    const suggestion = await prisma.suggestion.create({
-      data: parsed.data,
+    await prisma.$transaction(async (tx) => {
+      await tx.suggestion.updateMany({
+        where: { isActive: true },
+        data: { isActive: false },
+      });
+
+      if (parsed.data.length > 0) {
+        await tx.suggestion.createMany({
+          data: parsed.data,
+        });
+      }
     });
 
-    return NextResponse.json(suggestion, { status: 201 });
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
       { error: "Erreur lors de l'enregistrement en base." },
