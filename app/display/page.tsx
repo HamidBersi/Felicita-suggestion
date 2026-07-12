@@ -3,14 +3,32 @@
 import Image from "next/image";
 import { Wheat } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  defaultSuggestions,
-  loadSuggestions,
-  type LabelColor,
-  type Suggestion,
-} from "@/lib/suggestions-storage";
 
 const MAX_DISPLAYED = 8;
+
+type LabelColor = "orange" | "red" | "green";
+
+type ApiSuggestion = {
+  id: string;
+  title: string;
+  description: string | null;
+  price: string;
+  label: string | null;
+  labelColor: string;
+  position: number;
+  isActive: boolean;
+};
+
+type Suggestion = {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  label: string;
+  labelColor?: LabelColor;
+};
+
+type LoadState = "loading" | "error" | "ready";
 
 // Image de fond restaurant (cover, center)
 const BACKGROUND_IMAGE =
@@ -41,6 +59,21 @@ function getLabelBadgeClass(color: LabelColor = "orange"): string {
     default:
       return "bg-orange-500 text-black";
   }
+}
+
+function isLabelColor(color: string): color is LabelColor {
+  return color === "orange" || color === "red" || color === "green";
+}
+
+function apiToSuggestion(stored: ApiSuggestion): Suggestion {
+  return {
+    id: stored.id,
+    title: stored.title,
+    description: stored.description ?? "",
+    price: stored.price,
+    label: stored.label ?? "",
+    labelColor: isLabelColor(stored.labelColor) ? stored.labelColor : "orange",
+  };
 }
 
 type SuggestionCardProps = {
@@ -117,18 +150,32 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
 }
 
 export default function DisplayPage() {
-  const [suggestions, setSuggestions] =
-    useState<Suggestion[]>(defaultSuggestions);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loadState, setLoadState] = useState<LoadState>("loading");
 
   useEffect(() => {
-    const stored = loadSuggestions();
-    if (stored) {
-      setSuggestions(stored);
+    async function loadSuggestionsFromApi() {
+      try {
+        const response = await fetch("/api/suggestions");
+
+        if (!response.ok) {
+          setLoadState("error");
+          return;
+        }
+
+        const data = (await response.json()) as ApiSuggestion[];
+        setSuggestions(data.map(apiToSuggestion));
+        setLoadState("ready");
+      } catch {
+        setLoadState("error");
+      }
     }
+
+    void loadSuggestionsFromApi();
   }, []);
 
-  const hasOverflow = suggestions.length > MAX_DISPLAYED;
-  const displayed = suggestions.slice(0, MAX_DISPLAYED);
+  const hasOverflow = loadState === "ready" && suggestions.length > MAX_DISPLAYED;
+  const displayed = loadState === "ready" ? suggestions.slice(0, MAX_DISPLAYED) : [];
   const density = getDensity(displayed.length);
   const isTight = density === "tight";
   const isCompact = density === "compact" || isTight;
@@ -186,13 +233,29 @@ export default function DisplayPage() {
             isTight ? "gap-1.5" : isCompact ? "gap-2" : "gap-3"
           }`}
         >
-          {displayed.map((suggestion, index) => (
-            <SuggestionCard
-              key={`${suggestion.title}-${index}`}
-              suggestion={suggestion}
-              density={density}
-            />
-          ))}
+          {loadState === "loading" && (
+            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
+              Chargement des suggestions...
+            </p>
+          )}
+          {loadState === "error" && (
+            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
+              Impossible de charger les suggestions.
+            </p>
+          )}
+          {loadState === "ready" && displayed.length === 0 && (
+            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
+              Aucune suggestion pour le moment.
+            </p>
+          )}
+          {loadState === "ready" &&
+            displayed.map((suggestion) => (
+              <SuggestionCard
+                key={suggestion.id}
+                suggestion={suggestion}
+                density={density}
+              />
+            ))}
         </main>
 
         {/* Footer */}
