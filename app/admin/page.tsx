@@ -31,6 +31,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AdminGate, useAdminLogout } from "@/components/admin/admin-gate";
+import {
+  TitleAutocomplete,
+  type CatalogHit,
+} from "@/components/admin/title-autocomplete";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -216,6 +220,7 @@ type RowCardProps = {
   index: number;
   canRemove: boolean;
   onUpdate: (id: string, field: keyof SuggestionRow, value: string) => void;
+  onApplyCatalog: (id: string, hit: CatalogHit) => void;
   onRemove: (id: string) => void;
   dragHandle?: React.ReactNode;
 };
@@ -225,6 +230,7 @@ function RowCard({
   index,
   canRemove,
   onUpdate,
+  onApplyCatalog,
   onRemove,
   dragHandle,
 }: RowCardProps) {
@@ -257,12 +263,13 @@ function RowCard({
           <label htmlFor={`title-${index}`} className={fieldLabelClass}>
             Titre
           </label>
-          <Input
+          <TitleAutocomplete
             id={`title-${index}`}
             className={inputClass}
             placeholder="Ex : Risotto aux truffes"
             value={row.title}
-            onChange={(e) => onUpdate(row.id, "title", e.target.value)}
+            onChange={(value) => onUpdate(row.id, "title", value)}
+            onSelect={(hit) => onApplyCatalog(row.id, hit)}
           />
         </div>
 
@@ -371,6 +378,7 @@ function SortableRow(props: SortableRowProps) {
 type SortableListProps = {
   suggestions: SuggestionRow[];
   onUpdate: (id: string, field: keyof SuggestionRow, value: string) => void;
+  onApplyCatalog: (id: string, hit: CatalogHit) => void;
   onRemove: (id: string) => void;
   onDragEnd: (event: DragEndEvent) => void;
 };
@@ -378,6 +386,7 @@ type SortableListProps = {
 function SortableList({
   suggestions,
   onUpdate,
+  onApplyCatalog,
   onRemove,
   onDragEnd,
 }: SortableListProps) {
@@ -411,6 +420,7 @@ function SortableList({
               index={index}
               canRemove={suggestions.length > 1}
               onUpdate={onUpdate}
+              onApplyCatalog={onApplyCatalog}
               onRemove={onRemove}
             />
           ))}
@@ -459,6 +469,25 @@ function AdminPanel() {
     setSuggestions((current) =>
       current.map((row) =>
         row.id === id ? { ...row, [field]: value } : row
+      )
+    );
+  }
+
+  function applyCatalogHit(id: string, hit: CatalogHit) {
+    setSuggestions((current) =>
+      current.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              title: hit.title,
+              description: hit.description ?? "",
+              price: hit.price,
+              label: hit.label ?? "",
+              labelColor: isLabelColor(hit.labelColor)
+                ? hit.labelColor
+                : row.labelColor,
+            }
+          : row
       )
     );
   }
@@ -585,6 +614,7 @@ function AdminPanel() {
             <SortableList
               suggestions={suggestions}
               onUpdate={updateRow}
+              onApplyCatalog={applyCatalogHit}
               onRemove={removeRow}
               onDragEnd={handleDragEnd}
             />
@@ -597,6 +627,7 @@ function AdminPanel() {
                   index={index}
                   canRemove={suggestions.length > 1}
                   onUpdate={updateRow}
+                  onApplyCatalog={applyCatalogHit}
                   onRemove={removeRow}
                 />
               ))}

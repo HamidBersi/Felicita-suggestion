@@ -71,6 +71,87 @@ function validateSuggestionsBody(body: unknown):
   return { data };
 }
 
+type SuggestionTx = Pick<typeof prisma, "suggestion">;
+
+/**
+ * Anciens doublons (même titre) : on garde 1 ligne
+ * (actif en priorité, sinon le plus récent), on delete le reste.
+ */
+async function dedupeSuggestionsByTitle(tx: SuggestionTx) {
+  const rows = await tx.suggestion.findMany({
+    select: { id: true, title: true, isActive: true, updatedAt: true },
+    orderBy: [{ isActive: "desc" }, { updatedAt: "desc" }],
+  });
+
+  const keptTitles = new Set<string>();
+  const duplicateIds: string[] = [];
+
+  for (const row of rows) {
+    if (keptTitles.has(row.title)) {
+      duplicateIds.push(row.id);
+      continue;
+    }
+    keptTitles.add(row.title);
+  }
+
+  if (duplicateIds.length === 0) return;
+
+  await tx.suggestion.deleteMany({
+    where: { id: { in: duplicateIds } },
+  });
+}
+
+/** Une fiche par titre : update si elle existe, sinon create. */
+async function upsertSuggestionByTitle(
+  tx: SuggestionTx,
+  item: SuggestionCreateData
+) {
+  const existing = await tx.suggestion.findFirst({
+    where: { title: item.title },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  if (existing) {
+    await tx.suggestion.update({
+      where: { id: existing.id },
+      data: {
+        description: item.description,
+        price: item.price,
+        label: item.label,
+        labelColor: item.labelColor,
+        position: item.position,
+        isActive: true,
+      },
+    });
+    return;
+  }
+
+  await tx.suggestion.create({ data: item });
+}
+
+/** Menu du jour = actifs ; le reste du catalogue reste en BDD, inactif. */
+async function syncSuggestionsMenu(items: SuggestionCreateData[]) {
+  const titlesInMenu = items.map((item) => item.title);
+
+  await prisma.$transaction(async (tx) => {
+    await dedupeSuggestionsByTitle(tx);
+
+    for (const item of items) {
+      await upsertSuggestionByTitle(tx, item);
+    }
+
+    if (titlesInMenu.length === 0) {
+      await tx.suggestion.updateMany({ data: { isActive: false } });
+      return;
+    }
+
+    await tx.suggestion.updateMany({
+      where: { title: { notIn: titlesInMenu } },
+      data: { isActive: false },
+    });
+  });
+}
+
 export async function GET() {
   const suggestions = await prisma.suggestion.findMany({
     where: { isActive: true },
@@ -99,19 +180,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.suggestion.updateMany({
-        where: { isActive: true },
-        data: { isActive: false },
-      });
-
-      if (parsed.data.length > 0) {
-        await tx.suggestion.createMany({
-          data: parsed.data,
-        });
-      }
-    });
-
+    await syncSuggestionsMenu(parsed.data);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
