@@ -182,7 +182,8 @@ export async function POST(request: Request) {
   try {
     await syncSuggestionsMenu(parsed.data);
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/suggestions failed:", error);
     return NextResponse.json(
       { error: "Erreur lors de l'enregistrement en base." },
       { status: 500 }
