@@ -1,5 +1,5 @@
+/** Clé UI locale (ne contient PAS le PIN — la vraie session est le cookie httpOnly). */
 export const ADMIN_AUTH_KEY = "admin-auth";
-export const ADMIN_PIN = "072026";
 export const PIN_LENGTH = 6;
 
 export function isAdminAuthenticated(): boolean {

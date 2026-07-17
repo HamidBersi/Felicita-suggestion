@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/require-admin";
+
 
 type SuggestionInput = {
   title?: string;
@@ -19,6 +21,8 @@ type SuggestionCreateData = {
   position: number;
   isActive: true;
 };
+
+
 
 const PRICE_PATTERN = /^\d+(?:[.,]\d{1,2})?$/;
 
@@ -162,6 +166,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   let body: unknown;
 
   try {

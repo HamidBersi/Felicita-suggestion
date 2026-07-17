@@ -5,11 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  ADMIN_AUTH_KEY,
-  ADMIN_PIN,
-  PIN_LENGTH,
-} from "@/lib/admin-auth";
+import { ADMIN_AUTH_KEY, PIN_LENGTH } from "@/lib/admin-auth";
 import { cn } from "@/lib/utils";
 
 type PinScreenProps = {
@@ -20,6 +16,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
   const [digits, setDigits] = useState<string[]>(
     () => Array(PIN_LENGTH).fill(""),
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const focusInput = useCallback((index: number) => {
@@ -32,22 +29,37 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
   }, [focusInput]);
 
   const validate = useCallback(
-    (code: string) => {
-      if (code.length !== PIN_LENGTH || !/^\d{6}$/.test(code)) {
+    async (code: string) => {
+      if (code.length !== PIN_LENGTH || !/^\d{6}$/.test(code) || isSubmitting) {
         return;
       }
 
-      if (code === ADMIN_PIN) {
+      setIsSubmitting(true);
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ pin: code }),
+        });
+
+        if (!response.ok) {
+          toast.error("Code incorrect");
+          clearAndFocusFirst();
+          return;
+        }
+
         localStorage.setItem(ADMIN_AUTH_KEY, "true");
         toast.success("Connexion réussie");
         onSuccess();
-        return;
+      } catch {
+        toast.error("Erreur de connexion");
+        clearAndFocusFirst();
+      } finally {
+        setIsSubmitting(false);
       }
-
-      toast.error("Code incorrect");
-      clearAndFocusFirst();
     },
-    [clearAndFocusFirst, onSuccess],
+    [clearAndFocusFirst, isSubmitting, onSuccess],
   );
 
   useEffect(() => {
@@ -57,7 +69,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
   useEffect(() => {
     const code = digits.join("");
     if (code.length === PIN_LENGTH && digits.every((digit) => digit !== "")) {
-      validate(code);
+      void validate(code);
     }
   }, [digits, validate]);
 
@@ -174,9 +186,10 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
             <Button
               type="button"
               className="h-11 w-full rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 text-white shadow-lg shadow-sky-500/25 hover:from-sky-600 hover:to-sky-700"
-              onClick={() => validate(digits.join(""))}
+              onClick={() => void validate(digits.join(""))}
+              disabled={isSubmitting}
             >
-              Entrer
+              {isSubmitting ? "Vérification…" : "Entrer"}
             </Button>
           </div>
         </div>

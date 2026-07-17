@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 import { PinScreen } from "@/components/admin/pin-screen";
 import { Toaster } from "@/components/ui/sonner";
-import { ADMIN_AUTH_KEY, isAdminAuthenticated } from "@/lib/admin-auth";
+import { ADMIN_AUTH_KEY } from "@/lib/admin-auth";
 
 type AdminAuthContextValue = {
   logout: () => void;
@@ -29,7 +29,26 @@ export function AdminGate({ children }: AdminGateProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsAuthenticated(isAdminAuthenticated());
+    async function checkSession() {
+      try {
+        const response = await fetch("/api/admin/session", {
+          credentials: "include",
+        });
+        const data = (await response.json()) as { authenticated?: boolean };
+        const ok = data.authenticated === true;
+        setIsAuthenticated(ok);
+        if (ok) {
+          localStorage.setItem(ADMIN_AUTH_KEY, "true");
+        } else {
+          localStorage.removeItem(ADMIN_AUTH_KEY);
+        }
+      } catch {
+        localStorage.removeItem(ADMIN_AUTH_KEY);
+        setIsAuthenticated(false);
+      }
+    }
+
+    void checkSession();
   }, []);
 
   const handleSuccess = useCallback(() => {
@@ -37,9 +56,14 @@ export function AdminGate({ children }: AdminGateProps) {
   }, []);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem(ADMIN_AUTH_KEY);
-    setIsAuthenticated(false);
-    toast.success("Déconnecté");
+    void fetch("/api/admin/logout", {
+      method: "POST",
+      credentials: "include",
+    }).finally(() => {
+      localStorage.removeItem(ADMIN_AUTH_KEY);
+      setIsAuthenticated(false);
+      toast.success("Déconnecté");
+    });
   }, []);
 
   if (isAuthenticated === null) {
