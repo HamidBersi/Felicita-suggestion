@@ -90,7 +90,7 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
   return (
     <article
       className={`flex min-h-0 flex-1 flex-row items-center overflow-hidden rounded-3xl border border-white/15 bg-neutral-950/65 shadow-lg backdrop-blur-md ${
-        isTight ? "gap-2 p-2.5" : isCompact ? "gap-2.5 p-3" : "gap-3 p-4"
+        isTight ? "gap-2 p-2" : isCompact ? "gap-2 p-2" : "gap-2.5 p-2.5"
       }`}
     >
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -98,10 +98,10 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
           <span
             className={`inline-block w-fit shrink-0 rounded-full font-semibold uppercase tracking-wide ${getLabelBadgeClass(suggestion.labelColor ?? "orange")} ${
               isTight
-                ? "mb-1 px-1.5 py-0.5 text-[0.55rem]"
+                ? "mb-0.5 px-1.5 py-0.5 text-[0.55rem]"
                 : isCompact
-                  ? "mb-1 px-2 py-0.5 text-[0.6rem]"
-                  : "mb-1.5 px-2.5 py-0.5 text-[0.65rem]"
+                  ? "mb-0.5 px-2 py-0.5 text-[0.6rem]"
+                  : "mb-1 px-2.5 py-0.5 text-[0.65rem]"
             }`}
           >
             {suggestion.label}
@@ -122,10 +122,10 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
           <p
             className={`overflow-hidden leading-snug text-stone-300 line-clamp-2 ${
               isTight
-                ? "mt-0 text-[clamp(0.6rem,1.2vh,0.7rem)]"
+                ? "mt-0 text-[clamp(0.68rem,1.35vh,0.78rem)]"
                 : isCompact
-                  ? "mt-0.5 text-[clamp(0.65rem,1.35vh,0.75rem)]"
-                  : "mt-0.5 text-[clamp(0.72rem,1.6vh,0.85rem)]"
+                  ? "mt-0.5 text-[clamp(0.72rem,1.5vh,0.84rem)]"
+                  : "mt-0.5 text-[clamp(0.8rem,1.75vh,0.95rem)]"
             }`}
           >
             {suggestion.description}
@@ -134,12 +134,12 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
       </div>
       {price && (
         <p
-          className={`shrink-0 self-center text-right font-bold text-amber-400 ${
+          className={`shrink-0 self-center text-right font-semibold text-amber-400 ${
             isTight
-              ? "text-[clamp(0.7rem,1.6vh,0.88rem)]"
+              ? "text-[clamp(0.68rem,1.35vh,0.78rem)]"
               : isCompact
-                ? "text-[clamp(0.75rem,1.75vh,0.95rem)]"
-                : "text-[clamp(0.9rem,2.1vh,1.15rem)]"
+                ? "text-[clamp(0.72rem,1.5vh,0.84rem)]"
+                : "text-[clamp(0.8rem,1.75vh,0.95rem)]"
           }`}
         >
           {price}
@@ -222,11 +222,11 @@ export default function DisplayPage() {
         </button>
       ) : null}
 
-      <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-6 py-4">
+      <div className="relative z-10 mx-auto flex h-full w-[88%] max-w-2xl flex-col py-3">
         {/* Header */}
         <header
           className={`shrink-0 text-center ${
-            isTight ? "mb-3" : isCompact ? "mb-4" : "mb-5"
+            isTight ? "mb-2" : isCompact ? "mb-2.5" : "mb-3"
           }`}
         >
           <p
@@ -262,7 +262,7 @@ export default function DisplayPage() {
         {/* Cards */}
         <main
           className={`flex min-h-0 flex-1 flex-col ${
-            isTight ? "gap-1.5" : isCompact ? "gap-2" : "gap-3"
+            isTight ? "gap-1" : isCompact ? "gap-1.5" : "gap-2"
           }`}
         >
           {loadState === "loading" && (
