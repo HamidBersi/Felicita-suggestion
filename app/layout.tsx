@@ -23,10 +23,10 @@ export const metadata: Metadata = {
   description: "Suggestions du jour du restaurant Felicita",
   icons: {
     icon: [
-      { url: "/icons/icon-192.png?v=2", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png?v=2", sizes: "512x512", type: "image/png" },
+      { url: "/icons/icon-192.png?v=3", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png?v=3", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png?v=2", sizes: "180x180" }],
+    apple: [{ url: "/icons/apple-touch-icon.png?v=3", sizes: "180x180" }],
   },
   appleWebApp: {
     capable: true,
