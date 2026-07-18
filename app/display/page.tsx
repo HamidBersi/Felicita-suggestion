@@ -152,6 +152,19 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
 export default function DisplayPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [showVitrineBack, setShowVitrineBack] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fromVitrine = params.get("from") === "vitrine";
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in navigator &&
+        (navigator as Navigator & { standalone?: boolean }).standalone === true);
+
+    // Bouton Retour : lien vitrine uniquement (pas en mode PWA tablette)
+    setShowVitrineBack(fromVitrine && !isStandalone);
+  }, []);
 
   useEffect(() => {
     async function loadSuggestionsFromApi() {
@@ -174,6 +187,15 @@ export default function DisplayPage() {
     void loadSuggestionsFromApi();
   }, []);
 
+  function handleVitrineBack() {
+    const vitrineUrl = process.env.NEXT_PUBLIC_VITRINE_URL?.trim();
+    if (vitrineUrl) {
+      window.location.href = vitrineUrl;
+      return;
+    }
+    window.history.back();
+  }
+
   const hasOverflow = loadState === "ready" && suggestions.length > MAX_DISPLAYED;
   const displayed = loadState === "ready" ? suggestions.slice(0, MAX_DISPLAYED) : [];
   const density = getDensity(displayed.length);
@@ -189,6 +211,16 @@ export default function DisplayPage() {
       />
       {/* Overlay sombre pour la lisibilité */}
       <div className="absolute inset-0 bg-black/60" />
+
+      {showVitrineBack ? (
+        <button
+          type="button"
+          onClick={handleVitrineBack}
+          className="absolute left-4 top-4 z-20 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/70"
+        >
+          ← Retour
+        </button>
+      ) : null}
 
       <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-6 py-4">
         {/* Header */}
