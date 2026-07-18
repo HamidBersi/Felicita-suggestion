@@ -89,62 +89,68 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
 
   return (
     <article
-      className={`flex min-h-0 flex-1 flex-row items-center overflow-hidden rounded-3xl border border-white/15 bg-neutral-950/65 shadow-lg backdrop-blur-md ${
-        isTight ? "gap-2 p-2" : isCompact ? "gap-2 p-2" : "gap-2.5 p-2.5"
+      className={`relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-neutral-950/65 shadow-lg backdrop-blur-md ${
+        isTight ? "px-2.5 py-2" : isCompact ? "px-2.5 py-2.5" : "px-3 py-2.5"
       }`}
     >
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {hasLabel && (
-          <span
-            className={`inline-block w-fit shrink-0 rounded-full font-semibold uppercase tracking-wide ${getLabelBadgeClass(suggestion.labelColor ?? "orange")} ${
-              isTight
-                ? "mb-0.5 px-1.5 py-0.5 text-[0.55rem]"
-                : isCompact
-                  ? "mb-0.5 px-2 py-0.5 text-[0.6rem]"
-                  : "mb-1 px-2.5 py-0.5 text-[0.65rem]"
-            }`}
-          >
-            {suggestion.label}
-          </span>
-        )}
-        <h2
-          className={`shrink-0 font-bold leading-tight text-white ${
+      {hasLabel ? (
+        <span
+          className={`absolute right-3 top-2.5 z-10 rounded-full font-semibold uppercase tracking-wide ${getLabelBadgeClass(suggestion.labelColor ?? "orange")} ${
             isTight
-              ? "text-[clamp(0.72rem,1.5vh,0.85rem)]"
+              ? "px-2 py-0.5 text-[0.58rem]"
               : isCompact
-                ? "text-[clamp(0.78rem,1.65vh,0.9rem)]"
-                : "text-[clamp(0.9rem,2vh,1.1rem)]"
+                ? "px-2 py-0.5 text-[0.62rem]"
+                : "px-2.5 py-0.5 text-[0.68rem]"
+          }`}
+        >
+          {suggestion.label}
+        </span>
+      ) : null}
+
+      {price ? (
+        <p
+          className={`absolute bottom-2.5 right-3 z-10 text-right font-medium text-amber-400/90 ${
+            isTight
+              ? "text-[clamp(0.65rem,1.3vh,0.75rem)]"
+              : isCompact
+                ? "text-[clamp(0.7rem,1.4vh,0.8rem)]"
+                : "text-[clamp(0.75rem,1.55vh,0.88rem)]"
+          }`}
+        >
+          {price}
+        </p>
+      ) : null}
+
+      <div
+        className={`min-w-0 ${hasLabel || price ? "pr-[4.5rem]" : ""} ${
+          price ? "pb-5" : ""
+        }`}
+      >
+        <h2
+          className={`shrink-0 font-bold leading-tight text-stone-50 ${
+            isTight
+              ? "text-[clamp(0.8rem,1.7vh,0.95rem)]"
+              : isCompact
+                ? "text-[clamp(0.88rem,1.85vh,1.05rem)]"
+                : "text-[clamp(1rem,2.2vh,1.2rem)]"
           }`}
         >
           {suggestion.title}
         </h2>
         {suggestion.description.trim() && (
           <p
-            className={`overflow-hidden leading-snug text-stone-300 line-clamp-2 ${
+            className={`mb-1 leading-snug text-stone-300 ${
               isTight
-                ? "mt-0 text-[clamp(0.68rem,1.35vh,0.78rem)]"
+                ? "mt-1 text-[clamp(0.68rem,1.35vh,0.78rem)]"
                 : isCompact
-                  ? "mt-0.5 text-[clamp(0.72rem,1.5vh,0.84rem)]"
-                  : "mt-0.5 text-[clamp(0.8rem,1.75vh,0.95rem)]"
+                  ? "mt-1.5 text-[clamp(0.72rem,1.5vh,0.84rem)]"
+                  : "mt-1.5 text-[clamp(0.8rem,1.75vh,0.95rem)]"
             }`}
           >
             {suggestion.description}
           </p>
         )}
       </div>
-      {price && (
-        <p
-          className={`shrink-0 self-center text-right font-semibold text-amber-400 ${
-            isTight
-              ? "text-[clamp(0.68rem,1.35vh,0.78rem)]"
-              : isCompact
-                ? "text-[clamp(0.72rem,1.5vh,0.84rem)]"
-                : "text-[clamp(0.8rem,1.75vh,0.95rem)]"
-          }`}
-        >
-          {price}
-        </p>
-      )}
     </article>
   );
 }
@@ -222,11 +228,11 @@ export default function DisplayPage() {
         </button>
       ) : null}
 
-      <div className="relative z-10 mx-auto flex h-full w-[88%] max-w-2xl flex-col py-3">
+      <div className="relative z-10 mx-auto flex h-full w-[88%] max-w-2xl flex-col py-1">
         {/* Header */}
         <header
           className={`shrink-0 text-center ${
-            isTight ? "mb-2" : isCompact ? "mb-2.5" : "mb-3"
+            isTight ? "mb-1" : isCompact ? "mb-1.5" : "mb-2"
           }`}
         >
           <p
@@ -239,21 +245,21 @@ export default function DisplayPage() {
             Felicita
           </p>
           {/* Ligne décorative tricolore */}
-          <div className="mx-auto mt-1.5 h-0.5 w-20 bg-gradient-to-r from-green-600 via-white to-red-600" />
+          <div className="mx-auto mt-0.5 h-0.5 w-16 bg-gradient-to-r from-green-600 via-white to-red-600" />
           <h1
             className={`font-bold tracking-tight text-white ${
               isTight
-                ? "mt-2 text-[clamp(1rem,2.4vh,1.25rem)]"
+                ? "mt-1 text-[clamp(1rem,2.4vh,1.25rem)]"
                 : isCompact
-                  ? "mt-2.5 text-[clamp(1.1rem,2.8vh,1.4rem)]"
-                  : "mt-3 text-[clamp(1.35rem,3.2vh,1.75rem)]"
+                  ? "mt-1 text-[clamp(1.1rem,2.8vh,1.4rem)]"
+                  : "mt-1.5 text-[clamp(1.35rem,3.2vh,1.75rem)]"
             }`}
           >
             Suggestions du jour
           </h1>
           <Wheat
             className={`mx-auto text-amber-400/50 ${
-              isTight ? "mt-1 size-3.5" : isCompact ? "mt-1.5 size-4" : "mt-2 size-5"
+              isTight ? "mt-0.5 size-3" : isCompact ? "mt-1 size-3.5" : "mt-1 size-4"
             }`}
             aria-hidden
           />
@@ -261,8 +267,8 @@ export default function DisplayPage() {
 
         {/* Cards */}
         <main
-          className={`flex min-h-0 flex-1 flex-col ${
-            isTight ? "gap-1" : isCompact ? "gap-1.5" : "gap-2"
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${
+            isTight ? "gap-1" : isCompact ? "gap-1" : "gap-1.5"
           }`}
         >
           {loadState === "loading" && (
