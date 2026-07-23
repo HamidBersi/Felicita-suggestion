@@ -321,7 +321,7 @@ export default function DisplayPage() {
           )}
           <div className="flex items-center justify-center gap-3">
             <Image
-              src="/images/logo.webp"
+              src="/icons/icon-192.png"
               alt="Logo Felicita"
               width={32}
               height={32}

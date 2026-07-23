@@ -144,7 +144,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
         <div className="rounded-3xl border border-white/60 bg-white/80 p-8 shadow-2xl shadow-sky-900/10 backdrop-blur-xl">
           <div className="mb-8 text-center">
             <Image
-              src="/images/logo.webp"
+              src="/icons/icon-192.png"
               alt="Logo Felicita"
               width={56}
               height={56}
