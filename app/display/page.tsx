@@ -222,9 +222,25 @@ export default function DisplayPage() {
         <button
           type="button"
           onClick={handleVitrineBack}
-          className="absolute left-4 top-4 z-20 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/70"
+          className="absolute left-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-md transition-all active:scale-95 hover:bg-white/25 sm:left-4 sm:top-4 sm:h-12 sm:w-12"
+          aria-label="Retour au site"
         >
-          ← Retour
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+            className="mr-0.5"
+          >
+            <path
+              d="M15 6l-6 6 6 6"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       ) : null}
 
