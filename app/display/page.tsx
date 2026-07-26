@@ -93,20 +93,6 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
         isTight ? "px-2.5 py-2" : isCompact ? "px-2.5 py-2.5" : "px-3 py-2.5"
       }`}
     >
-      {hasLabel ? (
-        <span
-          className={`absolute right-3 top-2.5 z-10 rounded-full font-semibold uppercase tracking-wide ${getLabelBadgeClass(suggestion.labelColor ?? "orange")} ${
-            isTight
-              ? "px-2 py-0.5 text-[0.58rem]"
-              : isCompact
-                ? "px-2 py-0.5 text-[0.62rem]"
-                : "px-2.5 py-0.5 text-[0.68rem]"
-          }`}
-        >
-          {suggestion.label}
-        </span>
-      ) : null}
-
       {price ? (
         <p
           className={`absolute bottom-2.5 right-3 z-10 text-right font-medium text-amber-400/90 ${
@@ -121,22 +107,33 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
         </p>
       ) : null}
 
-      <div
-        className={`min-w-0 ${hasLabel || price ? "pr-[4.5rem]" : ""} ${
-          price ? "pb-5" : ""
-        }`}
-      >
-        <h2
-          className={`shrink-0 font-bold leading-tight text-stone-50 ${
-            isTight
-              ? "text-[clamp(0.8rem,1.7vh,0.95rem)]"
-              : isCompact
+      <div className={`min-w-0 ${price ? "pr-[4.5rem] pb-5" : ""}`}>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <h2
+            className={`min-w-0 font-bold leading-tight text-stone-50 ${
+              isTight
                 ? "text-[clamp(0.88rem,1.85vh,1.05rem)]"
-                : "text-[clamp(1rem,2.2vh,1.2rem)]"
-          }`}
-        >
-          {suggestion.title}
-        </h2>
+                : isCompact
+                  ? "text-[clamp(0.95rem,2vh,1.15rem)]"
+                  : "text-[clamp(1.1rem,2.4vh,1.3rem)]"
+            }`}
+          >
+            {suggestion.title}
+          </h2>
+          {hasLabel ? (
+            <span
+              className={`shrink-0 rounded-full font-semibold uppercase tracking-wide ${getLabelBadgeClass(suggestion.labelColor ?? "orange")} ${
+                isTight
+                  ? "px-1.5 py-0.5 text-[0.5rem]"
+                  : isCompact
+                    ? "px-1.5 py-0.5 text-[0.52rem]"
+                    : "px-2 py-0.5 text-[0.58rem]"
+              }`}
+            >
+              {suggestion.label}
+            </span>
+          ) : null}
+        </div>
         {suggestion.description.trim() && (
           <p
             className={`mb-1 leading-snug text-stone-300 ${
