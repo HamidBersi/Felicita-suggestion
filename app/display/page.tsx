@@ -204,6 +204,8 @@ export default function DisplayPage() {
   const density = getDensity(displayed.length);
   const isTight = density === "tight";
   const isCompact = density === "compact" || isTight;
+  const shouldCenterOnPortrait =
+    loadState === "ready" && displayed.length > 0 && density === "comfortable";
 
   return (
     <div className="relative h-dvh max-h-dvh overflow-hidden text-white">
@@ -249,16 +251,16 @@ export default function DisplayPage() {
           }`}
         >
           <p
-            className={`bg-gradient-to-r from-green-500 via-white to-red-600 bg-clip-text font-[family-name:var(--font-cormorant)] font-light tracking-[0.22em] text-transparent ${
+            className={`bg-gradient-to-r from-green-500 via-white to-red-600 bg-clip-text font-[family-name:var(--font-cormorant)] font-normal tracking-[0.2em] text-transparent ${
               isTight
-                ? "text-[clamp(1.3rem,3vh,1.9rem)]"
-                : "text-[clamp(1.6rem,3.8vh,2.4rem)]"
+                ? "text-[clamp(1.5rem,3.5vh,2.2rem)]"
+                : "text-[clamp(1.9rem,4.5vh,2.85rem)]"
             }`}
           >
             Felicita
           </p>
           {/* Ligne décorative tricolore */}
-          <div className="mx-auto mt-0.5 h-0.5 w-16 bg-gradient-to-r from-green-600 via-white to-red-600" />
+          <div className="mx-auto mt-0.5 h-0.5 w-20 bg-gradient-to-r from-green-600 via-white to-red-600" />
           <h1
             className={`font-bold tracking-tight text-white ${
               isTight
@@ -281,8 +283,8 @@ export default function DisplayPage() {
         {/* Cards */}
         <main
           className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${
-            isTight ? "gap-1" : isCompact ? "gap-1" : "gap-1.5"
-          }`}
+            shouldCenterOnPortrait ? "[@media(orientation:portrait)]:justify-center" : ""
+          } ${isTight ? "gap-1" : isCompact ? "gap-1" : "gap-1.5"}`}
         >
           {loadState === "loading" && (
             <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
