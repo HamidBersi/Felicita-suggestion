@@ -204,8 +204,7 @@ export default function DisplayPage() {
   const density = getDensity(displayed.length);
   const isTight = density === "tight";
   const isCompact = density === "compact" || isTight;
-  const shouldCenterOnPortrait =
-    loadState === "ready" && displayed.length > 0 && density === "comfortable";
+  const cardsGap = isTight ? "gap-1" : isCompact ? "gap-1" : "gap-1.5";
 
   return (
     <div className="relative h-dvh max-h-dvh overflow-hidden text-white">
@@ -281,11 +280,7 @@ export default function DisplayPage() {
         </header>
 
         {/* Cards */}
-        <main
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${
-            shouldCenterOnPortrait ? "[@media(orientation:portrait)]:justify-center" : ""
-          } ${isTight ? "gap-1" : isCompact ? "gap-1" : "gap-1.5"}`}
-        >
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {loadState === "loading" && (
             <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
               Chargement des suggestions...
@@ -301,14 +296,17 @@ export default function DisplayPage() {
               Aucune suggestion pour le moment.
             </p>
           )}
-          {loadState === "ready" &&
-            displayed.map((suggestion) => (
-              <SuggestionCard
-                key={suggestion.id}
-                suggestion={suggestion}
-                density={density}
-              />
-            ))}
+          {loadState === "ready" && displayed.length > 0 && (
+            <div className={`my-auto flex w-full flex-col ${cardsGap}`}>
+              {displayed.map((suggestion) => (
+                <SuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  density={density}
+                />
+              ))}
+            </div>
+          )}
         </main>
 
         {/* Footer */}
