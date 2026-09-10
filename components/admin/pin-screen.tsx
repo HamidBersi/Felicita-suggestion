@@ -10,9 +10,19 @@ import { cn } from "@/lib/utils";
 
 type PinScreenProps = {
   onSuccess: () => void;
+  /** Défaut : login suggestions */
+  loginUrl?: string;
+  /** Défaut : clé localStorage suggestions */
+  authStorageKey?: string;
+  subtitle?: string;
 };
 
-export function PinScreen({ onSuccess }: PinScreenProps) {
+export function PinScreen({
+  onSuccess,
+  loginUrl = "/api/admin/login",
+  authStorageKey = ADMIN_AUTH_KEY,
+  subtitle = "Accès Administration",
+}: PinScreenProps) {
   const [digits, setDigits] = useState<string[]>(
     () => Array(PIN_LENGTH).fill(""),
   );
@@ -36,7 +46,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
 
       setIsSubmitting(true);
       try {
-        const response = await fetch("/api/admin/login", {
+        const response = await fetch(loginUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -49,7 +59,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
           return;
         }
 
-        localStorage.setItem(ADMIN_AUTH_KEY, "true");
+        localStorage.setItem(authStorageKey, "true");
         toast.success("Connexion réussie");
         onSuccess();
       } catch {
@@ -59,7 +69,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
         setIsSubmitting(false);
       }
     },
-    [clearAndFocusFirst, isSubmitting, onSuccess],
+    [authStorageKey, clearAndFocusFirst, isSubmitting, loginUrl, onSuccess],
   );
 
   useEffect(() => {
@@ -154,7 +164,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
             <h1 className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold tracking-tight text-stone-900">
               Felicita
             </h1>
-            <p className="mt-2 text-sm text-stone-500">Accès Administration</p>
+            <p className="mt-2 text-sm text-stone-500">{subtitle}</p>
           </div>
 
           <div className="space-y-6">
