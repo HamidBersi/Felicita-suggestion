@@ -38,6 +38,9 @@ export function MenuAdminApp() {
     null,
   );
   const [previewFilter, setPreviewFilter] = useState<string | "all">("all");
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printSelection, setPrintSelection] = useState<string[]>([]);
+  const [printFilter, setPrintFilter] = useState<"all" | string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<MenuItemDto | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -189,13 +192,46 @@ export function MenuAdminApp() {
     }
   }
 
-  function handlePrint() {
-    setView("preview");
-    window.setTimeout(() => window.print(), 150);
+  function openPrintModal() {
+    setPrintSelection(categories.map((category) => category.id));
+    setPrintOpen(true);
   }
+
+  function togglePrintCategory(categoryId: string) {
+    setPrintSelection((current) =>
+      current.includes(categoryId)
+        ? current.filter((id) => id !== categoryId)
+        : [...current, categoryId],
+    );
+  }
+
+  function handlePrintSelection() {
+    if (printSelection.length === 0) {
+      toast.error("Sélectionnez au moins une catégorie.");
+      return;
+    }
+
+    const allSelected = printSelection.length === categories.length;
+    setPrintFilter(allSelected ? "all" : printSelection);
+    setView("preview");
+    setPrintOpen(false);
+
+    window.setTimeout(() => {
+      window.print();
+    }, 200);
+  }
+
+  useEffect(() => {
+    function onAfterPrint() {
+      setPrintFilter(null);
+    }
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => window.removeEventListener("afterprint", onAfterPrint);
+  }, []);
 
   const formOpen = isCreating || editingItem !== null;
   const qrSrc = `/api/menu/qr?url=${encodeURIComponent(menuPublicUrl)}`;
+  const sheetFilter = printFilter ?? previewFilter;
 
   return (
     <div className="menu-admin-root flex min-h-dvh flex-1 flex-col bg-[#F7F2E7] text-[#1B1E19]">
@@ -236,7 +272,7 @@ export function MenuAdminApp() {
           <button
             type="button"
             className="inline-flex items-center gap-1.5 rounded-md border border-[#D8B871]/70 px-3 py-2 text-[13px] text-[#FBF8F1] transition hover:bg-white/10"
-            onClick={handlePrint}
+            onClick={openPrintModal}
           >
             <Printer className="size-3.5" />
             Imprimer
@@ -392,7 +428,7 @@ export function MenuAdminApp() {
           <div className="flex-1 overflow-y-auto">
             <MenuSheet
               categories={categories}
-              filterCategoryId={previewFilter}
+              categoryFilter={sheetFilter}
             />
           </div>
         </div>
@@ -484,6 +520,84 @@ export function MenuAdminApp() {
                 className="rounded-md bg-[#1E3A2F] px-4 py-2 text-[13.5px] font-semibold text-[#FBF8F1] hover:bg-[#2C5142] disabled:opacity-60"
               >
                 {saving ? "Enregistrement…" : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {printOpen ? (
+        <div className="menu-admin-chrome fixed inset-0 z-50 flex items-center justify-center bg-[#1B1E19]/55 p-5">
+          <div className="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="font-[family-name:var(--font-cormorant)] text-[23px]">
+              Imprimer le menu
+            </h3>
+            <p className="mt-2 text-sm text-[#6b6a5f]">
+              Choisissez les catégories à imprimer. Chaque catégorie commence
+              sur une nouvelle page. Le nombre d&apos;exemplaires se règle dans
+              la boîte d&apos;impression. Pour masquer la date / l&apos;URL,
+              décochez « En-têtes et pieds de page » dans les options
+              d&apos;impression.
+            </p>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                className="text-xs font-semibold text-[#1E3A2F] underline"
+                onClick={() =>
+                  setPrintSelection(categories.map((category) => category.id))
+                }
+              >
+                Tout sélectionner
+              </button>
+              <button
+                type="button"
+                className="text-xs font-semibold text-[#6b6a5f] underline"
+                onClick={() => setPrintSelection([])}
+              >
+                Tout désélectionner
+              </button>
+            </div>
+
+            <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+              {categories.map((category) => {
+                const checked = printSelection.includes(category.id);
+                return (
+                  <li key={category.id}>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => togglePrintCategory(category.id)}
+                        className="size-4 accent-[#1E3A2F]"
+                      />
+                      <span className="flex-1 text-sm font-medium">
+                        {category.name}
+                      </span>
+                      <span className="text-xs text-[#6b6a5f]">
+                        {category.items.length} plat
+                        {category.items.length > 1 ? "s" : ""}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPrintOpen(false)}
+                className="rounded-md border border-[#D9CFB8] px-4 py-2 text-[13.5px]"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handlePrintSelection}
+                className="rounded-md bg-[#1E3A2F] px-4 py-2 text-[13.5px] font-semibold text-[#FBF8F1]"
+              >
+                Imprimer la sélection
               </button>
             </div>
           </div>

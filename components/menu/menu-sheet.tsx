@@ -2,21 +2,29 @@ import type { MenuCategoryDto } from "@/components/menu/menu-types";
 
 type MenuSheetProps = {
   categories: MenuCategoryDto[];
-  filterCategoryId?: string | "all";
+  /** "all" | id unique | liste d'ids (impression sélective) */
+  categoryFilter?: "all" | string | string[];
   restaurantName?: string;
   subtitle?: string;
 };
 
+function categoryMatchesFilter(
+  categoryId: string,
+  filter: "all" | string | string[],
+): boolean {
+  if (filter === "all") return true;
+  if (Array.isArray(filter)) return filter.includes(categoryId);
+  return filter === categoryId;
+}
+
 export function MenuSheet({
   categories,
-  filterCategoryId = "all",
+  categoryFilter = "all",
   restaurantName = "La Félicità",
   subtitle = "Furdenheim — Cuisine italienne",
 }: MenuSheetProps) {
   const visibleCategories = categories
-    .filter((category) =>
-      filterCategoryId === "all" ? true : category.id === filterCategoryId,
-    )
+    .filter((category) => categoryMatchesFilter(category.id, categoryFilter))
     .map((category) => ({
       ...category,
       items: category.items.filter((item) => item.isAvailable),
@@ -71,10 +79,6 @@ export function MenuSheet({
           </section>
         ))
       )}
-
-      <p className="menu-foot mt-11 text-center text-xs tracking-wide text-[#6b6a5f]">
-        Merci de votre visite
-      </p>
     </div>
   );
 }

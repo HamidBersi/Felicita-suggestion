@@ -137,21 +137,43 @@
 }
 
 @media print {
+  html,
+  body {
+    height: auto !important;
+    min-height: 0 !important;
+    background: white !important;
+  }
+
   .menu-admin-chrome {
     display: none !important;
   }
 
   .menu-admin-root {
     background: white !important;
-    min-height: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    display: block !important;
   }
 
   .menu-sheet {
     max-width: 100% !important;
     padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .menu-sheet-header {
+    margin-bottom: 1.25rem !important;
+  }
+
+  /* Entre deux catégories uniquement — pas après la dernière
+     (sinon le footer "Merci…" partait seul sur une 2e page) */
+  .menu-cat:not(:last-of-type) {
+    break-after: page;
+    page-break-after: always;
   }
 
   .menu-cat {
     break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
