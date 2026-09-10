@@ -90,7 +90,7 @@ export function OwnerGate({ children }: OwnerGateProps) {
 
   return (
     <OwnerAuthenticatedContext.Provider value={{ logout: handleLogout }}>
-      {children}
+      <div className="flex min-h-dvh flex-1 flex-col">{children}</div>
     </OwnerAuthenticatedContext.Provider>
   );
 }

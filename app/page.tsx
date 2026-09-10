@@ -87,9 +87,16 @@ export default function Home() {
             <PortalCard
               href="/admin"
               emoji="✏️"
-              title="Administration"
-              description="Créer et modifier les suggestions."
+              title="Suggestions"
+              description="Créer et modifier les suggestions du jour."
               className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both delay-300 duration-700 sm:col-span-1"
+            />
+            <PortalCard
+              href="/admin/menu"
+              emoji="🍽️"
+              title="Menu"
+              description="Gérer la carte (accès patron)."
+              className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both delay-450 duration-700 sm:col-span-2"
             />
           </nav>
         </div>
