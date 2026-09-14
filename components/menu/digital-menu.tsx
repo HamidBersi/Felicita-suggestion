@@ -22,7 +22,6 @@ import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types"
 import {
   formatEuro,
   hasWineTiers,
-  WINE_TIER_COLUMNS,
 } from "@/components/menu/wine-prices";
 
 type DigitalMenuProps = {
@@ -162,21 +161,27 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
           })}
         </div>
 
-        {activeFamily ? (
+          {activeFamily ? (
           <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
-            <p className="mb-1.5 text-[10px] font-semibold tracking-[0.16em] text-[#8a8578] uppercase">
-              Dans {activeFamily.label}
-            </p>
             <div className="flex flex-wrap gap-x-1 gap-y-0">
+              <button
+                type="button"
+                onClick={() => setSubCategoryName(null)}
+                className={`shrink-0 border-b-2 px-2.5 py-1 text-[13px] transition ${
+                  subCategoryName === null
+                    ? "border-[#1E3A2F] font-semibold text-[#1E3A2F]"
+                    : "border-transparent text-[#6b675c] hover:text-[#1B1E19]"
+                }`}
+              >
+                Tout
+              </button>
               {activeFamily.categoryNames.map((name) => {
                 const selected = subCategoryName === name;
                 return (
                   <button
                     key={name}
                     type="button"
-                    onClick={() =>
-                      setSubCategoryName((current) => (current === name ? null : name))
-                    }
+                    onClick={() => setSubCategoryName(name)}
                     className={`shrink-0 border-b-2 px-2.5 py-1 text-[13px] transition ${
                       selected
                         ? "border-[#1E3A2F] font-semibold text-[#1E3A2F]"
@@ -254,10 +259,13 @@ function FamilyChip({
 
 function WineRow({ item }: { item: MenuItemDto }) {
   const headline = item.priceVerre || item.priceBouteille || item.price;
-  const formats = WINE_TIER_COLUMNS.filter((column) => {
+  const formats = [
+    { key: "priceQuart" as const, label: "Quart" },
+    { key: "priceDemi" as const, label: "Demi" },
+    { key: "priceBouteille" as const, label: "Bouteille" },
+  ].filter((column) => {
     if (!item[column.key]) return false;
-    if (item.priceVerre && column.key === "priceVerre") return false;
-    if (!item.priceVerre && column.key === "priceBouteille") return false;
+    if (column.key === "priceBouteille" && !item.priceVerre) return false;
     return true;
   });
 
@@ -274,13 +282,10 @@ function WineRow({ item }: { item: MenuItemDto }) {
         </span>
       </div>
       {formats.length > 0 ? (
-        <p className="mt-1.5 flex flex-wrap gap-x-8 gap-y-1 text-[13px] text-[#7a766c]">
+        <p className="mt-1 flex flex-wrap gap-x-3.5 gap-y-0.5 text-[13px] font-normal text-[#7a766c]">
           {formats.map((column) => (
-            <span key={column.key} className="inline-flex items-baseline gap-1.5">
-              {column.label}
-              <span className="font-semibold tabular-nums text-[#1B1E19]">
-                {formatEuro(item[column.key])}
-              </span>
+            <span key={column.key} className="tabular-nums">
+              {column.label} {formatEuro(item[column.key])}
             </span>
           ))}
         </p>

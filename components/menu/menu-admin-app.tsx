@@ -411,8 +411,8 @@ export function MenuAdminApp() {
                         item.priceBouteille ? (
                           <p className="text-[12px] text-[#6b6a5f]">
                             {[
-                              item.priceQuart ? `1/4 ${item.priceQuart} €` : null,
-                              item.priceDemi ? `1/2 ${item.priceDemi} €` : null,
+                              item.priceQuart ? `Quart ${item.priceQuart} €` : null,
+                              item.priceDemi ? `Demi ${item.priceDemi} €` : null,
                               item.priceBouteille
                                 ? `Btl ${item.priceBouteille} €`
                                 : null,
@@ -514,8 +514,8 @@ export function MenuAdminApp() {
                     {(
                       [
                         ["priceVerre", "Verre"],
-                        ["priceQuart", "1/4"],
-                        ["priceDemi", "1/2"],
+                        ["priceQuart", "Quart"],
+                        ["priceDemi", "Demi"],
                         ["priceBouteille", "Bouteille"],
                       ] as const
                     ).map(([key, label]) => (

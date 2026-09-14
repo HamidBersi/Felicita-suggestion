@@ -11,6 +11,7 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["300", "400", "600"],
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({

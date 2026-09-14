@@ -136,7 +136,60 @@
   }
 }
 
+.menu-cover {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.menu-cover-logo {
+  display: block;
+  width: min(28rem, 92%);
+  height: auto;
+  margin: 0 auto 1.75rem;
+}
+
+.menu-cover-frame {
+  border: 2.5px solid #e56a45;
+  border-bottom: 0;
+  border-top-right-radius: 2.25rem;
+  padding: 2rem 1.75rem 0.5rem;
+  color: #1b1e19;
+  font-size: 21px;
+  line-height: 1.5;
+  font-weight: 600;
+  text-align: center;
+}
+
+.menu-cover-frame p + p {
+  margin-top: 1.45rem;
+}
+
+.menu-stack .menu-cat,
+.menu-sheet > .menu-cat {
+  margin-bottom: 1.6rem;
+}
+
+.menu-dish {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.menu-cat-title {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.wine-row {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 22mm;
+  }
+
   html,
   body {
     height: auto !important;
@@ -159,21 +212,44 @@
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .menu-sheet-header {
-    margin-bottom: 1.25rem !important;
-  }
-
-  /* Entre deux catégories uniquement — pas après la dernière
-     (sinon le footer "Merci…" partait seul sur une 2e page) */
-  .menu-cat:not(:last-of-type) {
+  .menu-cover {
     break-after: page;
     page-break-after: always;
+    margin-bottom: 0;
+  }
+
+  .menu-cover-logo {
+    width: 58%;
+    max-width: 145mm;
+    margin-bottom: 12mm;
+  }
+
+  .menu-cover-frame {
+    font-size: 21px;
+    line-height: 1.55;
+    padding: 14mm 10mm 4mm;
+  }
+
+  .menu-cover-frame p + p {
+    margin-top: 7mm;
+  }
+
+  .menu-cat-title {
+    font-size: 28px !important;
+    font-weight: 600 !important;
+    color: #8f6a24 !important;
+  }
+
+  .wine-table thead {
+    display: table-header-group;
   }
 
   .wine-table {
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: auto;
+    page-break-inside: auto;
   }
 }

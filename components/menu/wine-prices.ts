@@ -2,8 +2,8 @@ import type { MenuItemDto } from "@/components/menu/menu-types";
 
 export const WINE_TIER_COLUMNS = [
   { key: "priceVerre", label: "Verre" },
-  { key: "priceQuart", label: "1/4" },
-  { key: "priceDemi", label: "1/2" },
+  { key: "priceQuart", label: "Quart" },
+  { key: "priceDemi", label: "Demi" },
   { key: "priceBouteille", label: "Bouteille" },
 ] as const;
 
