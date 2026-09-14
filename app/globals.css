@@ -150,9 +150,8 @@
 
 .menu-cover-frame {
   border: 2.5px solid #e56a45;
-  border-bottom: 0;
-  border-top-right-radius: 2.25rem;
-  padding: 2rem 1.75rem 0.5rem;
+  border-radius: 2.25rem;
+  padding: 2rem 1.75rem;
   color: #1b1e19;
   font-size: 21px;
   line-height: 1.5;
@@ -160,8 +159,23 @@
   text-align: center;
 }
 
-.menu-cover-frame p + p {
-  margin-top: 1.45rem;
+.menu-sheet--measure {
+  width: 166mm !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.menu-sheet--measure .menu-cover-logo {
+  width: 58%;
+  max-width: 145mm;
+  margin-bottom: 12mm;
+}
+
+.menu-sheet--measure .menu-cover-frame {
+  font-size: 21px;
+  line-height: 1.55;
+  padding: 10mm 12mm;
 }
 
 .menu-stack .menu-cat,
@@ -216,10 +230,31 @@
     print-color-adjust: exact;
   }
 
+  .menu-print-page,
+  .menu-cover {
+    padding: 0 !important;
+  }
+
   .menu-cover {
     break-after: page;
     page-break-after: always;
     margin-bottom: 0;
+  }
+
+  .menu-print-pages .menu-cover {
+    break-after: auto;
+    page-break-after: auto;
+    margin-bottom: 0;
+  }
+
+  .menu-print-page {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .menu-print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
   }
 
   .menu-cover-logo {
@@ -231,7 +266,7 @@
   .menu-cover-frame {
     font-size: 21px;
     line-height: 1.55;
-    padding: 14mm 10mm 4mm;
+    padding: 10mm 12mm;
   }
 
   .menu-cover-frame p + p {

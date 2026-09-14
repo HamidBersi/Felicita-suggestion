@@ -1,4 +1,5 @@
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import { DishTitle } from "@/components/menu/dish-title";
 import {
   formatEuro,
   hasWineTiers,
@@ -10,6 +11,10 @@ type MenuSheetProps = {
   categories: MenuCategoryDto[];
   /** "all" | id unique | liste d'ids (impression sélective) */
   categoryFilter?: "all" | string | string[];
+  /** Pages déjà découpées (impression par n°) */
+  printSlices?: PrintPageSlice[] | null;
+  /** Mise en page A4 pour mesurer les pages */
+  measure?: boolean;
   restaurantName?: string;
   subtitle?: string;
 };
@@ -48,10 +53,10 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
         {items.map((item) => {
           const { title, style } = splitWineName(item.name);
           return (
-            <tr key={item.id} className="wine-row border-t border-[#E8E1D4]">
+            <tr key={item.id} data-item-id={item.id} className="wine-row border-t border-[#E8E1D4]">
               <td className="py-1.5 pr-3">
                 <span className="font-[family-name:var(--font-cormorant)] text-[18px] font-semibold text-[#1B1E19]">
-                  {title}
+                  <DishTitle name={title} emoji={item.emoji} />
                 </span>
                 {style ? (
                   <span className="ml-1.5 text-[11px] text-[#8a8578]">{style}</span>
@@ -80,10 +85,10 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
 
 function DishBlock({ item }: { item: MenuItemDto }) {
   return (
-    <article className="menu-dish">
+    <article className="menu-dish" data-item-id={item.id}>
       <div className="flex items-baseline gap-2">
         <span className="min-w-0 font-[family-name:var(--font-cormorant)] text-[18px] leading-tight font-semibold text-[#1B1E19]">
-          {item.name}
+          <DishTitle name={item.name} emoji={item.emoji} />
         </span>
         <span
           className="mb-0.5 min-w-[1rem] flex-1 border-b border-dotted border-[#b9b19b]"
@@ -102,15 +107,24 @@ function DishBlock({ item }: { item: MenuItemDto }) {
   );
 }
 
-function CategoryBlock({ category }: { category: MenuCategoryDto }) {
+function CategoryBlock({
+  category,
+  continuation = false,
+}: {
+  category: MenuCategoryDto;
+  continuation?: boolean;
+}) {
   const wineItems = category.items.filter((item) => hasWineTiers(item));
   const otherItems = category.items.filter((item) => !hasWineTiers(item));
   const asWineTable = wineItems.length > 0 && otherItems.length === 0;
 
   return (
-    <section className="menu-cat">
+    <section className="menu-cat" data-category-id={category.id}>
       <h2 className="menu-cat-title mb-3 flex items-center gap-3 font-[family-name:var(--font-cormorant)] text-[28px] font-semibold italic leading-none text-[#8F6A24]">
-        <span>{category.name}</span>
+        <span>
+          {category.name}
+          {continuation ? " (suite)" : ""}
+        </span>
         <span className="h-px flex-1 bg-[#D9CFB8]" aria-hidden />
       </h2>
 
@@ -148,6 +162,8 @@ function MenuCover() {
 export function MenuSheet({
   categories,
   categoryFilter = "all",
+  printSlices = null,
+  measure = false,
   restaurantName = "La Félicità",
   subtitle = "Furdenheim — Cuisine italienne",
 }: MenuSheetProps) {
@@ -160,8 +176,41 @@ export function MenuSheet({
     }))
     .filter((category) => category.items.length > 0);
 
+  if (printSlices && printSlices.length > 0) {
+    return (
+      <div className="menu-sheet menu-print-pages mx-auto w-full max-w-[720px] px-10 py-10 sm:px-12 print:max-w-none print:p-0">
+        {printSlices.map((slice) => (
+          <section key={slice.page} className="menu-print-page">
+            {slice.isCover ? (
+              <MenuCover />
+            ) : (
+              <div className="menu-stack">
+                {slice.sections.map((section) => (
+                  <CategoryBlock
+                    key={`${slice.page}-${section.categoryId}-${section.continuation ? "c" : "s"}`}
+                    continuation={section.continuation}
+                    category={{
+                      id: section.categoryId,
+                      name: section.categoryName,
+                      position: 0,
+                      items: section.items,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="menu-sheet mx-auto w-full max-w-[720px] px-10 py-10 sm:px-12">
+    <div
+      className={`menu-sheet mx-auto w-full max-w-[720px] px-10 py-10 sm:px-12 print:max-w-none print:p-0${
+        measure ? " menu-sheet--measure" : ""
+      }`}
+    >
       {showCover ? (
         <MenuCover />
       ) : (

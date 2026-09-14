@@ -1,23 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CakeSlice,
-  Coffee,
-  LayoutGrid,
-  Pizza,
-  Search,
-  Utensils,
-  UtensilsCrossed,
-  Wine,
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 import {
   MENU_FAMILIES,
-  chipLabel,
   type MenuFamily,
   type MenuFamilyId,
 } from "@/components/menu/menu-groups";
+import { MenuFamilyBar } from "@/components/menu/menu-family-bar";
+import { DishTitle } from "@/components/menu/dish-title";
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
 import {
   formatEuro,
@@ -26,15 +18,6 @@ import {
 
 type DigitalMenuProps = {
   categories: MenuCategoryDto[];
-};
-
-const FAMILY_ICONS: Record<MenuFamily["id"], typeof Wine> = {
-  aperitivo: Wine,
-  antipasti: Utensils,
-  piatti: UtensilsCrossed,
-  pizzeria: Pizza,
-  dolci: CakeSlice,
-  dopo: Coffee,
 };
 
 function normalize(value: string): string {
@@ -139,62 +122,13 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
       </label>
 
       <div className="sticky top-0 z-20 -mx-4 mt-4 bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
-        <div className="flex flex-wrap gap-1.5">
-          <FamilyChip
-            active={familyId === "all"}
-            icon={LayoutGrid}
-            label="Tout"
-            onClick={() => selectFamily("all")}
-          />
-          {MENU_FAMILIES.map((family) => {
-            const Icon = FAMILY_ICONS[family.id];
-            return (
-              <FamilyChip
-                key={family.id}
-                active={familyId === family.id}
-                icon={Icon}
-                label={family.navLabel ?? family.label}
-                title={family.label}
-                onClick={() => selectFamily(family.id)}
-              />
-            );
-          })}
-        </div>
-
-          {activeFamily ? (
-          <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
-            <div className="flex flex-wrap gap-x-1 gap-y-0">
-              <button
-                type="button"
-                onClick={() => setSubCategoryName(null)}
-                className={`shrink-0 border-b-2 px-2.5 py-1 text-[13px] transition ${
-                  subCategoryName === null
-                    ? "border-[#1E3A2F] font-semibold text-[#1E3A2F]"
-                    : "border-transparent text-[#6b675c] hover:text-[#1B1E19]"
-                }`}
-              >
-                Tout
-              </button>
-              {activeFamily.categoryNames.map((name) => {
-                const selected = subCategoryName === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => setSubCategoryName(name)}
-                    className={`shrink-0 border-b-2 px-2.5 py-1 text-[13px] transition ${
-                      selected
-                        ? "border-[#1E3A2F] font-semibold text-[#1E3A2F]"
-                        : "border-transparent text-[#6b675c] hover:text-[#1B1E19]"
-                    }`}
-                  >
-                    {chipLabel(activeFamily, name)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
+        <MenuFamilyBar
+          familyId={familyId}
+          onFamilyChange={selectFamily}
+          subCategoryName={subCategoryName}
+          onSubCategoryChange={setSubCategoryName}
+          categoryNames={categories.map((category) => category.name)}
+        />
       </div>
 
       <div className="mt-6 space-y-10">
@@ -227,36 +161,6 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
   );
 }
 
-function FamilyChip({
-  active,
-  icon: Icon,
-  label,
-  title,
-  onClick,
-}: {
-  active: boolean;
-  icon: typeof Wine;
-  label: string;
-  title?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-        active
-          ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
-          : "border-[#e4dfd4] bg-[#fbf8f1] text-[#3d3a32] hover:border-[#1E3A2F]/25"
-      }`}
-    >
-      <Icon className="size-3.5" />
-      {label}
-    </button>
-  );
-}
-
 function WineRow({ item }: { item: MenuItemDto }) {
   const headline = item.priceVerre || item.priceBouteille || item.price;
   const formats = [
@@ -272,7 +176,9 @@ function WineRow({ item }: { item: MenuItemDto }) {
   return (
     <article>
       <div className="flex items-baseline gap-2">
-        <h3 className="shrink-0 text-[15.5px] font-semibold text-[#1B1E19]">{item.name}</h3>
+        <h3 className="shrink-0 text-[15.5px] font-semibold text-[#1B1E19]">
+          <DishTitle name={item.name} emoji={item.emoji} />
+        </h3>
         <span
           className="mb-1 min-w-[1.25rem] flex-1 border-b border-dotted border-[#cfc8b8]"
           aria-hidden
@@ -310,7 +216,7 @@ function DishRow({ item }: { item: MenuItemDto }) {
     <article>
       <div className="flex items-baseline gap-2">
         <h3 className="shrink-0 text-[15.5px] font-semibold text-[#1B1E19]">
-          {title}
+          <DishTitle name={title} emoji={item.emoji} />
           {volume ? (
             <span className="ml-1.5 font-normal text-[#8a8578]">{volume}</span>
           ) : null}

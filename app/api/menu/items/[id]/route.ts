@@ -6,6 +6,7 @@ import {
   parseOptionalPrice,
   PRICE_PATTERN,
 } from "@/lib/menu-price";
+import { normalizeDishEmoji } from "@/lib/dish-emoji";
 
 type UpdateItemBody = {
   name?: string;
@@ -17,6 +18,7 @@ type UpdateItemBody = {
   priceQuart?: string | null;
   priceDemi?: string | null;
   priceBouteille?: string | null;
+  emoji?: string | null;
 };
 
 type RouteContext = {
@@ -47,6 +49,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     priceQuart?: string | null;
     priceDemi?: string | null;
     priceBouteille?: string | null;
+    emoji?: string | null;
   } = {};
 
   if (typeof input.name === "string") {
@@ -109,6 +112,10 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (typeof input.isAvailable === "boolean") {
     data.isAvailable = input.isAvailable;
+  }
+
+  if ("emoji" in input) {
+    data.emoji = normalizeDishEmoji(input.emoji);
   }
 
   if (Object.keys(data).length === 0) {

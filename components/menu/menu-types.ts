@@ -11,6 +11,7 @@ export type MenuItemDto = {
   priceQuart?: string | null;
   priceDemi?: string | null;
   priceBouteille?: string | null;
+  emoji?: string | null;
 };
 
 export type MenuCategoryDto = {

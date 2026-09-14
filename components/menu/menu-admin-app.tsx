@@ -1,13 +1,30 @@
 "use client";
 
 import { LogOut, Plus, Printer, QrCode } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { isWineCategoryName } from "@/lib/menu-price";
+import { DishTitle } from "@/components/menu/dish-title";
+import { DishEmojiSelect } from "@/components/menu/dish-emoji-select";
+import { DISH_EMOJI_OPTIONS } from "@/lib/dish-emoji";
 import { DigitalMenu } from "@/components/menu/digital-menu";
+import {
+  MenuFamilyBar,
+  categoriesForFamily,
+  familyIdForCategoryName,
+} from "@/components/menu/menu-family-bar";
 import { MenuSheet } from "@/components/menu/menu-sheet";
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import type { MenuFamilyId } from "@/components/menu/menu-groups";
+import {
+  loadLastPrintHashes,
+  modifiedPrintPages,
+  pagePreviewLabel,
+  rememberPrintedPages,
+  slicePrintPagesFromDom,
+  type PrintPageSlice,
+} from "@/components/menu/print-pagination";
 import { useOwnerLogout } from "@/components/menu/owner-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +42,7 @@ type DishFormState = {
   priceQuart: string;
   priceDemi: string;
   priceBouteille: string;
+  emoji: string;
 };
 
 type AdminView = "edit" | "preview";
@@ -38,18 +56,25 @@ const emptyForm: DishFormState = {
   priceQuart: "",
   priceDemi: "",
   priceBouteille: "",
+  emoji: "",
 };
 
 export function MenuAdminApp() {
+  void DISH_EMOJI_OPTIONS;
   const logout = useOwnerLogout();
   const [view, setView] = useState<AdminView>("edit");
   const [categories, setCategories] = useState<MenuCategoryDto[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
+  const [familyId, setFamilyId] = useState<MenuFamilyId>("all");
   const [printOpen, setPrintOpen] = useState(false);
-  const [printSelection, setPrintSelection] = useState<string[]>([]);
-  const [printFilter, setPrintFilter] = useState<"all" | string[] | null>(null);
+  const [printSelection, setPrintSelection] = useState<number[]>([]);
+  const [printSlices, setPrintSlices] = useState<PrintPageSlice[] | null>(null);
+  const [estimatedPages, setEstimatedPages] = useState<PrintPageSlice[]>([]);
+  const [modifiedPages, setModifiedPages] = useState<number[]>([]);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const pageHeightRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<MenuItemDto | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -92,9 +117,29 @@ export function MenuAdminApp() {
     () => categories.find((category) => category.id === selectedCategoryId) ?? null,
     [categories, selectedCategoryId],
   );
+  const familyReadyRef = useRef(false);
+
+  useEffect(() => {
+    if (familyReadyRef.current || !selectedCategory) return;
+    familyReadyRef.current = true;
+    setFamilyId(familyIdForCategoryName(selectedCategory.name));
+  }, [selectedCategory]);
   const isWineForm = Boolean(
     selectedCategory && isWineCategoryName(selectedCategory.name),
   );
+
+  function selectFamily(next: MenuFamilyId) {
+    setFamilyId(next);
+    const inFamily = categoriesForFamily(next, categories);
+    const keep = inFamily.find((category) => category.id === selectedCategoryId);
+    setSelectedCategoryId((keep ?? inFamily[0])?.id ?? null);
+  }
+
+  function selectSubCategory(name: string | null) {
+    if (!name) return;
+    const found = categories.find((category) => category.name === name);
+    if (found) setSelectedCategoryId(found.id);
+  }
 
   function openCreate() {
     if (!selectedCategoryId) {
@@ -118,6 +163,7 @@ export function MenuAdminApp() {
       priceQuart: item.priceQuart ?? "",
       priceDemi: item.priceDemi ?? "",
       priceBouteille: item.priceBouteille ?? "",
+      emoji: item.emoji ?? "",
     });
   }
 
@@ -160,12 +206,14 @@ export function MenuAdminApp() {
             imageUrl: form.imageUrl,
             price,
             ...wineTiers,
+            emoji: form.emoji,
           }
         : {
             name,
             description: form.description,
             price,
             imageUrl: form.imageUrl,
+            emoji: form.emoji,
           };
       if (editingItem) {
         const response = await fetch(`/api/menu/items/${editingItem.id}`, {
@@ -231,26 +279,68 @@ export function MenuAdminApp() {
   }
 
   function openPrintModal() {
-    setPrintSelection(categories.map((category) => category.id));
+    setEstimatedPages([]);
+    setPrintSelection([]);
+    setModifiedPages([]);
     setPrintOpen(true);
   }
 
-  function togglePrintCategory(categoryId: string) {
+  useEffect(() => {
+    if (!printOpen) return;
+
+    let cancelled = false;
+
+    async function measurePages() {
+      await document.fonts.ready;
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      if (cancelled) return;
+      const root = measureRef.current;
+      const probe = pageHeightRef.current;
+      if (!root || !probe) return;
+      const slices = slicePrintPagesFromDom(
+        root,
+        Math.max(probe.offsetHeight, 1),
+        categories,
+      );
+      const modified = modifiedPrintPages(slices, loadLastPrintHashes());
+      setEstimatedPages(slices);
+      setModifiedPages(modified);
+      setPrintSelection(slices.map((slice) => slice.page));
+    }
+
+    void measurePages();
+    return () => {
+      cancelled = true;
+    };
+  }, [printOpen, categories]);
+
+  function togglePrintPage(page: number) {
     setPrintSelection((current) =>
-      current.includes(categoryId)
-        ? current.filter((id) => id !== categoryId)
-        : [...current, categoryId],
+      current.includes(page)
+        ? current.filter((value) => value !== page)
+        : [...current, page].sort((a, b) => a - b),
     );
+  }
+
+  function selectAllPrintPages() {
+    setPrintSelection(estimatedPages.map((slice) => slice.page));
+  }
+
+  function selectModifiedPrintPages() {
+    setPrintSelection(modifiedPages);
   }
 
   function handlePrintSelection() {
     if (printSelection.length === 0) {
-      toast.error("Sélectionnez au moins une catégorie.");
+      toast.error("Sélectionnez au moins une page.");
       return;
     }
 
-    const allSelected = printSelection.length === categories.length;
-    setPrintFilter(allSelected ? "all" : printSelection);
+    const selected = estimatedPages.filter((slice) =>
+      printSelection.includes(slice.page),
+    );
+    setPrintSlices(selected);
     setView("preview");
     setPrintOpen(false);
 
@@ -261,15 +351,27 @@ export function MenuAdminApp() {
 
   useEffect(() => {
     function onAfterPrint() {
-      setPrintFilter(null);
+      if (printSlices && estimatedPages.length > 0) {
+        rememberPrintedPages(
+          estimatedPages,
+          printSlices.map((slice) => slice.page),
+        );
+      }
+      setPrintSlices(null);
     }
     window.addEventListener("afterprint", onAfterPrint);
     return () => window.removeEventListener("afterprint", onAfterPrint);
-  }, []);
+  }, [printSlices, estimatedPages]);
 
   const formOpen = isCreating || editingItem !== null;
   const qrSrc = `/api/menu/qr?url=${encodeURIComponent(menuPublicUrl)}`;
-  const sheetFilter = printFilter ?? "all";
+  const allPagesSelected =
+    estimatedPages.length > 0 &&
+    printSelection.length === estimatedPages.length;
+  const modifiedPagesSelected =
+    modifiedPages.length > 0 &&
+    printSelection.length === modifiedPages.length &&
+    modifiedPages.every((page) => printSelection.includes(page));
 
   return (
     <div className="menu-admin-root flex min-h-dvh flex-1 flex-col bg-[#F7F2E7] text-[#1B1E19]">
@@ -336,36 +438,19 @@ export function MenuAdminApp() {
       </header>
 
       {view === "edit" ? (
-        <div className="grid min-h-0 flex-1 lg:grid-cols-[260px_1fr]">
-          <aside className="menu-admin-chrome border-b border-[#D9CFB8] bg-[#FBF8F1] p-4 lg:border-b-0 lg:border-r">
-            <h2 className="mb-2.5 px-1 text-[11px] font-semibold text-[#6b6a5f]">
-              Catégories
-            </h2>
-            <div className="space-y-1">
-              {categories.map((category) => {
-                const active = category.id === selectedCategoryId;
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => setSelectedCategoryId(category.id)}
-                    className={`flex w-full items-center justify-between rounded-[7px] px-3 py-2.5 text-left text-[14.5px] transition ${
-                      active
-                        ? "bg-[#1E3A2F] text-[#FBF8F1]"
-                        : "hover:bg-[#1E3A2F]/10"
-                    }`}
-                  >
-                    <span>{category.name}</span>
-                    <span
-                      className={`text-xs ${active ? "opacity-70" : "text-[#6b6a5f]"}`}
-                    >
-                      {category.items.length}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="menu-admin-chrome shrink-0 border-b border-[#D9CFB8] bg-[#FBF8F1]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+            <MenuFamilyBar
+              familyId={familyId}
+              onFamilyChange={selectFamily}
+              subCategoryName={selectedCategory?.name ?? null}
+              onSubCategoryChange={selectSubCategory}
+              categoryNames={categoriesForFamily("all", categories).map(
+                (category) => category.name,
+              )}
+              showSubAllTab={false}
+            />
+          </div>
 
           <section className="overflow-y-auto p-6 sm:p-8">
             {loading ? (
@@ -399,7 +484,7 @@ export function MenuAdminApp() {
                       >
                         <div className="flex min-w-0 items-start justify-between gap-2">
                           <h3 className="min-w-0 flex-1 break-words font-[family-name:var(--font-cormorant)] text-[19px] font-semibold leading-snug">
-                            {item.name}
+                            <DishTitle name={item.name} emoji={item.emoji} />
                           </h3>
                           <span className="shrink-0 font-semibold text-[#1E3A2F]">
                             {item.price} €
@@ -429,14 +514,14 @@ export function MenuAdminApp() {
                         <div className="mt-1.5 flex justify-end gap-1">
                           <button
                             type="button"
-                            className="rounded px-2 py-1 text-[12.5px] text-[#6b6a5f] hover:bg-black/5 hover:text-[#1B1E19]"
+                            className="rounded px-2 py-1 text-[12.5px] font-semibold text-[#6b6a5f] hover:bg-black/5 hover:text-[#1B1E19]"
                             onClick={() => openEdit(item)}
                           >
                             Modifier
                           </button>
                           <button
                             type="button"
-                            className="rounded px-2 py-1 text-[12.5px] text-[#6E2A2A] hover:bg-[#6E2A2A]/10"
+                            className="rounded px-2 py-1 text-[12.5px] font-semibold text-[#6E2A2A] hover:bg-[#6E2A2A]/10"
                             onClick={() => void deleteDish(item)}
                           >
                             Supprimer
@@ -453,14 +538,14 @@ export function MenuAdminApp() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col bg-[#F4F1EA]">
           <div
-            className={`flex-1 overflow-y-auto print:hidden ${printFilter ? "hidden" : ""}`}
+            className={`flex-1 overflow-y-auto print:hidden ${printSlices ? "hidden" : ""}`}
           >
             <DigitalMenu categories={categories} />
           </div>
-          <div className={printFilter ? "block" : "hidden print:block"}>
+          <div className={printSlices ? "block" : "hidden print:block"}>
             <MenuSheet
               categories={categories}
-              categoryFilter={sheetFilter}
+              printSlices={printSlices}
             />
           </div>
         </div>
@@ -478,14 +563,22 @@ export function MenuAdminApp() {
                 <span className="mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]">
                   {isWineForm ? "Nom du vin" : "Nom du plat"}
                 </span>
-                <Input
-                  value={form.name}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.target.value }))
-                  }
-                  placeholder="Ex. Filet de bar rôti"
-                  className="border-[#D9CFB8] bg-[#FBF8F1]"
-                />
+                <div className="relative">
+                  <Input
+                    value={form.name}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, name: event.target.value }))
+                    }
+                    placeholder="Ex. Filet de bar rôti"
+                    className="border-[#D9CFB8] bg-[#FBF8F1] pr-12"
+                  />
+                  <DishEmojiSelect
+                    value={form.emoji}
+                    onChange={(emoji) =>
+                      setForm((current) => ({ ...current, emoji }))
+                    }
+                  />
+                </div>
               </label>
 
               <label className="block">
@@ -596,60 +689,87 @@ export function MenuAdminApp() {
 
       {printOpen ? (
         <div className="menu-admin-chrome fixed inset-0 z-50 flex items-center justify-center bg-[#1B1E19]/55 p-5">
+          <div className="pointer-events-none fixed top-0 -left-[240vw] -z-10">
+            <div ref={pageHeightRef} className="h-[269mm] w-[166mm]" />
+            <div ref={measureRef} className="w-[166mm]">
+              <MenuSheet categories={categories} measure />
+            </div>
+          </div>
+
           <div className="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-xl">
             <h3 className="font-[family-name:var(--font-cormorant)] text-[23px]">
               Imprimer le menu
             </h3>
-            <p className="mt-2 text-sm text-[#6b6a5f]">
-              Choisissez les catégories à imprimer. Chaque catégorie commence
-              sur une nouvelle page. Le nombre d&apos;exemplaires se règle dans
-              la boîte d&apos;impression. Pour masquer la date / l&apos;URL,
-              décochez « En-têtes et pieds de page » dans les options
-              d&apos;impression.
-            </p>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                className="text-xs font-semibold text-[#1E3A2F] underline"
-                onClick={() =>
-                  setPrintSelection(categories.map((category) => category.id))
-                }
-              >
-                Tout sélectionner
-              </button>
-              <button
-                type="button"
-                className="text-xs font-semibold text-[#6b6a5f] underline"
-                onClick={() => setPrintSelection([])}
-              >
-                Tout désélectionner
-              </button>
+            <div className="mt-4 space-y-2">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={allPagesSelected}
+                  onChange={() => {
+                    if (allPagesSelected) {
+                      setPrintSelection([]);
+                    } else {
+                      selectAllPrintPages();
+                    }
+                  }}
+                  className="size-4 accent-[#1E3A2F]"
+                />
+                <span className="text-sm font-medium">Tout</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={modifiedPagesSelected}
+                  disabled={modifiedPages.length === 0}
+                  onChange={() => {
+                    if (modifiedPagesSelected) {
+                      setPrintSelection([]);
+                    } else {
+                      selectModifiedPrintPages();
+                    }
+                  }}
+                  className="size-4 accent-[#1E3A2F]"
+                />
+                <span className="text-sm font-medium">
+                  Imprimer les pages modifiées
+                </span>
+                <span className="ml-auto text-xs text-[#6b6a5f]">
+                  {modifiedPages.length}
+                </span>
+              </label>
             </div>
 
-            <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
-              {categories.map((category) => {
-                const checked = printSelection.includes(category.id);
-                return (
-                  <li key={category.id}>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-2.5">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => togglePrintCategory(category.id)}
-                        className="size-4 accent-[#1E3A2F]"
-                      />
-                      <span className="flex-1 text-sm font-medium">
-                        {category.name}
-                      </span>
-                      <span className="text-xs text-[#6b6a5f]">
-                        {category.items.length} plat
-                        {category.items.length > 1 ? "s" : ""}
-                      </span>
-                    </label>
-                  </li>
-                );
-              })}
+            <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
+              {estimatedPages.length === 0 ? (
+                <li className="px-1 py-6 text-center text-sm text-[#6b6a5f]">
+                  Calcul des pages…
+                </li>
+              ) : (
+                estimatedPages.map((slice) => {
+                  const checked = printSelection.includes(slice.page);
+                  const changed = modifiedPages.includes(slice.page);
+                  return (
+                    <li key={slice.page}>
+                      <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-2.5">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => togglePrintPage(slice.page)}
+                          className="size-4 accent-[#1E3A2F]"
+                        />
+                        <span className="flex-1 text-sm font-medium">
+                          Page {slice.page}
+                        </span>
+                        <span className="max-w-[58%] truncate text-right text-xs text-[#6b6a5f]">
+                          {changed ? "modifiée · " : ""}
+                          {pagePreviewLabel(slice)}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })
+              )}
             </ul>
 
             <div className="mt-5 flex justify-end gap-2">
@@ -665,7 +785,7 @@ export function MenuAdminApp() {
                 onClick={handlePrintSelection}
                 className="rounded-md bg-[#1E3A2F] px-4 py-2 text-[13.5px] font-semibold text-[#FBF8F1]"
               >
-                Imprimer la sélection
+                Imprimer
               </button>
             </div>
           </div>
