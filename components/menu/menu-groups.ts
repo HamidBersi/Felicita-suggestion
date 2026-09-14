@@ -14,6 +14,8 @@ export type MenuFamilyId =
 export type MenuFamily = {
   id: Exclude<MenuFamilyId, "all">;
   label: string;
+  /** Libellé court dans la barre (si plus long que le bouton) */
+  navLabel?: string;
   /** Noms exacts de MenuCategory.name, dans l’ordre du 2e rail */
   categoryNames: string[];
   /** Libellé chip si différent du nom en base */
@@ -25,7 +27,7 @@ export type MenuFamily = {
 export const MENU_FAMILIES: MenuFamily[] = [
   {
     id: "aperitivo",
-    label: "L'aperitivo",
+    label: "Boissons",
     categoryNames: [
       "Apéritifs",
       "Cocktails",
@@ -40,31 +42,32 @@ export const MENU_FAMILIES: MenuFamily[] = [
   },
   {
     id: "antipasti",
-    label: "Antipasti",
+    label: "Entrées",
     categoryNames: ["Entrées", "Salades"],
     countNoun: "plats",
   },
   {
     id: "piatti",
-    label: "I piatti",
+    label: "Plats",
     categoryNames: ["Viandes", "Nos poissons", "Pâtes", "Pâtes fraîches"],
     countNoun: "plats",
   },
   {
     id: "pizzeria",
-    label: "Pizzeria",
+    label: "Pizzas",
     categoryNames: ["Pizzas", "Pizzas spéciales"],
     countNoun: "pizzas",
   },
   {
     id: "dolci",
-    label: "Dolci",
+    label: "Desserts",
     categoryNames: ["Desserts"],
     countNoun: "desserts",
   },
   {
     id: "dopo",
-    label: "Dopo",
+    label: "Cafés & digestifs",
+    navLabel: "Cafés",
     categoryNames: ["Boissons chaudes", "Les digestifs"],
     chipLabelByName: {
       "Boissons chaudes": "Chaudes",

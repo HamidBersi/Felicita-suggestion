@@ -140,7 +140,7 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
       </label>
 
       <div className="sticky top-0 z-20 -mx-4 mt-4 bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
-        <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-wrap gap-1.5">
           <FamilyChip
             active={familyId === "all"}
             icon={LayoutGrid}
@@ -154,7 +154,8 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
                 key={family.id}
                 active={familyId === family.id}
                 icon={Icon}
-                label={family.label}
+                label={family.navLabel ?? family.label}
+                title={family.label}
                 onClick={() => selectFamily(family.id)}
               />
             );
@@ -162,23 +163,31 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
         </div>
 
         {activeFamily ? (
-          <div className="mt-2.5 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {activeFamily.categoryNames.map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() =>
-                  setSubCategoryName((current) => (current === name ? null : name))
-                }
-                className={`shrink-0 rounded-full border px-3 py-1 text-[13px] transition ${
-                  subCategoryName === name
-                    ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
-                    : "border-[#ddd6c8] bg-transparent text-[#6b675c] hover:border-[#1E3A2F]/30"
-                }`}
-              >
-                {chipLabel(activeFamily, name)}
-              </button>
-            ))}
+          <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
+            <p className="mb-1.5 text-[10px] font-semibold tracking-[0.16em] text-[#8a8578] uppercase">
+              Dans {activeFamily.label}
+            </p>
+            <div className="flex flex-wrap gap-x-1 gap-y-0">
+              {activeFamily.categoryNames.map((name) => {
+                const selected = subCategoryName === name;
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() =>
+                      setSubCategoryName((current) => (current === name ? null : name))
+                    }
+                    className={`shrink-0 border-b-2 px-2.5 py-1 text-[13px] transition ${
+                      selected
+                        ? "border-[#1E3A2F] font-semibold text-[#1E3A2F]"
+                        : "border-transparent text-[#6b675c] hover:text-[#1B1E19]"
+                    }`}
+                  >
+                    {chipLabel(activeFamily, name)}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ) : null}
       </div>
@@ -217,18 +226,21 @@ function FamilyChip({
   active,
   icon: Icon,
   label,
+  title,
   onClick,
 }: {
   active: boolean;
   icon: typeof Wine;
   label: string;
+  title?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      title={title}
       onClick={onClick}
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition ${
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
         active
           ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
           : "border-[#e4dfd4] bg-[#fbf8f1] text-[#3d3a32] hover:border-[#1E3A2F]/25"
