@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/require-owner";
-
-const PRICE_PATTERN = /^\d+(?:[.,]\d{1,2})?$/;
+import {
+  headlineFromTiers,
+  parseOptionalPrice,
+  PRICE_PATTERN,
+} from "@/lib/menu-price";
 
 type CreateItemBody = {
   categoryId?: string;
@@ -10,6 +13,10 @@ type CreateItemBody = {
   description?: string;
   price?: string;
   imageUrl?: string;
+  priceVerre?: string;
+  priceQuart?: string;
+  priceDemi?: string;
+  priceBouteille?: string;
 };
 
 export async function POST(request: Request) {
@@ -27,12 +34,34 @@ export async function POST(request: Request) {
   const categoryId = input.categoryId?.trim() ?? "";
   const name = input.name?.trim() ?? "";
   const description = input.description?.trim() || null;
-  const priceRaw = input.price?.trim().replace(",", ".") ?? "";
   const imageUrl = input.imageUrl?.trim() || null;
+
+  const verre = parseOptionalPrice(input.priceVerre);
+  const quart = parseOptionalPrice(input.priceQuart);
+  const demi = parseOptionalPrice(input.priceDemi);
+  const bouteille = parseOptionalPrice(input.priceBouteille);
+  if (!verre.ok || !quart.ok || !demi.ok || !bouteille.ok) {
+    return NextResponse.json({ error: "Prix invalide." }, { status: 400 });
+  }
+
+  const hasWineTiers = Boolean(
+    verre.value || quart.value || demi.value || bouteille.value,
+  );
+
+  let priceRaw = input.price?.trim().replace(",", ".") ?? "";
+  if (hasWineTiers) {
+    priceRaw =
+      headlineFromTiers({
+        verre: verre.value,
+        quart: quart.value,
+        demi: demi.value,
+        bouteille: bouteille.value,
+      }) ?? "";
+  }
 
   if (!categoryId || !name || !priceRaw) {
     return NextResponse.json(
-      { error: "Catégorie, nom et prix sont obligatoires." },
+      { error: "Catégorie, nom et au moins un prix sont obligatoires." },
       { status: 400 },
     );
   }
@@ -63,6 +92,10 @@ export async function POST(request: Request) {
       imageUrl,
       position: (last?.position ?? -1) + 1,
       isAvailable: true,
+      priceVerre: verre.value,
+      priceQuart: quart.value,
+      priceDemi: demi.value,
+      priceBouteille: bouteille.value,
     },
   });
 

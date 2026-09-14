@@ -7,11 +7,17 @@ export type MenuItemDto = {
   isAvailable: boolean;
   position: number;
   categoryId: string;
+  priceVerre?: string | null;
+  priceQuart?: string | null;
+  priceDemi?: string | null;
+  priceBouteille?: string | null;
 };
 
 export type MenuCategoryDto = {
   id: string;
   name: string;
   position: number;
+  /** "salle" | "emporter" */
+  menuType?: string;
   items: MenuItemDto[];
 };

@@ -24,7 +24,11 @@ model MenuCategory {
   id       String     @id @default(cuid())
   name     String
   position Int
+  /** "salle" | "emporter" — deux cartes distinctes, même schéma */
+  menuType String     @default("salle")
   items    MenuItem[]
+
+  @@index([menuType])
 }
 
 model MenuItem {
@@ -35,6 +39,11 @@ model MenuItem {
   imageUrl    String?
   isAvailable Boolean      @default(true)
   position    Int
+  /** Tarifs vin (null = format non proposé) */
+  priceVerre     String?
+  priceQuart     String?
+  priceDemi      String?
+  priceBouteille String?
   categoryId  String
   category    MenuCategory @relation(fields: [categoryId], references: [id])
   createdAt   DateTime     @default(now())

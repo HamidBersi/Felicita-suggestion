@@ -4,6 +4,8 @@ import { LogOut, Plus, Printer, QrCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { isWineCategoryName } from "@/lib/menu-price";
+import { DigitalMenu } from "@/components/menu/digital-menu";
 import { MenuSheet } from "@/components/menu/menu-sheet";
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
 import { useOwnerLogout } from "@/components/menu/owner-gate";
@@ -19,6 +21,10 @@ type DishFormState = {
   description: string;
   price: string;
   imageUrl: string;
+  priceVerre: string;
+  priceQuart: string;
+  priceDemi: string;
+  priceBouteille: string;
 };
 
 type AdminView = "edit" | "preview";
@@ -28,6 +34,10 @@ const emptyForm: DishFormState = {
   description: "",
   price: "",
   imageUrl: "",
+  priceVerre: "",
+  priceQuart: "",
+  priceDemi: "",
+  priceBouteille: "",
 };
 
 export function MenuAdminApp() {
@@ -37,7 +47,6 @@ export function MenuAdminApp() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
-  const [previewFilter, setPreviewFilter] = useState<string | "all">("all");
   const [printOpen, setPrintOpen] = useState(false);
   const [printSelection, setPrintSelection] = useState<string[]>([]);
   const [printFilter, setPrintFilter] = useState<"all" | string[] | null>(null);
@@ -83,6 +92,9 @@ export function MenuAdminApp() {
     () => categories.find((category) => category.id === selectedCategoryId) ?? null,
     [categories, selectedCategoryId],
   );
+  const isWineForm = Boolean(
+    selectedCategory && isWineCategoryName(selectedCategory.name),
+  );
 
   function openCreate() {
     if (!selectedCategoryId) {
@@ -102,6 +114,10 @@ export function MenuAdminApp() {
       description: item.description ?? "",
       price: item.price,
       imageUrl: item.imageUrl ?? "",
+      priceVerre: item.priceVerre ?? "",
+      priceQuart: item.priceQuart ?? "",
+      priceDemi: item.priceDemi ?? "",
+      priceBouteille: item.priceBouteille ?? "",
     });
   }
 
@@ -113,25 +129,50 @@ export function MenuAdminApp() {
 
   async function saveDish() {
     const name = form.name.trim();
-    const price = form.price.trim();
+    const wineTiers = {
+      priceVerre: form.priceVerre.trim(),
+      priceQuart: form.priceQuart.trim(),
+      priceDemi: form.priceDemi.trim(),
+      priceBouteille: form.priceBouteille.trim(),
+    };
+    const price = isWineForm
+      ? wineTiers.priceVerre ||
+        wineTiers.priceBouteille ||
+        wineTiers.priceQuart ||
+        wineTiers.priceDemi
+      : form.price.trim();
+
     if (!name || !price) {
-      toast.error("Le nom et le prix sont obligatoires.");
+      toast.error(
+        isWineForm
+          ? "Le nom et au moins un tarif (verre ou bouteille) sont obligatoires."
+          : "Le nom et le prix sont obligatoires.",
+      );
       return;
     }
 
     setSaving(true);
     try {
+      const payload = isWineForm
+        ? {
+            name,
+            description: form.description,
+            imageUrl: form.imageUrl,
+            price,
+            ...wineTiers,
+          }
+        : {
+            name,
+            description: form.description,
+            price,
+            imageUrl: form.imageUrl,
+          };
       if (editingItem) {
         const response = await fetch(`/api/menu/items/${editingItem.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({
-            name,
-            description: form.description,
-            price,
-            imageUrl: form.imageUrl,
-          }),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as {
@@ -148,10 +189,7 @@ export function MenuAdminApp() {
           credentials: "include",
           body: JSON.stringify({
             categoryId: selectedCategoryId,
-            name,
-            description: form.description,
-            price,
-            imageUrl: form.imageUrl,
+            ...payload,
           }),
         });
         if (!response.ok) {
@@ -231,7 +269,7 @@ export function MenuAdminApp() {
 
   const formOpen = isCreating || editingItem !== null;
   const qrSrc = `/api/menu/qr?url=${encodeURIComponent(menuPublicUrl)}`;
-  const sheetFilter = printFilter ?? previewFilter;
+  const sheetFilter = printFilter ?? "all";
 
   return (
     <div className="menu-admin-root flex min-h-dvh flex-1 flex-col bg-[#F7F2E7] text-[#1B1E19]">
@@ -367,6 +405,22 @@ export function MenuAdminApp() {
                             {item.price} €
                           </span>
                         </div>
+                        {item.priceVerre ||
+                        item.priceQuart ||
+                        item.priceDemi ||
+                        item.priceBouteille ? (
+                          <p className="text-[12px] text-[#6b6a5f]">
+                            {[
+                              item.priceQuart ? `1/4 ${item.priceQuart} €` : null,
+                              item.priceDemi ? `1/2 ${item.priceDemi} €` : null,
+                              item.priceBouteille
+                                ? `Btl ${item.priceBouteille} €`
+                                : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        ) : null}
                         {item.description?.trim() ? (
                           <p className="w-full break-words text-sm leading-snug text-[#6b6a5f]">
                             {item.description}
@@ -397,35 +451,13 @@ export function MenuAdminApp() {
           </section>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="menu-admin-chrome flex flex-wrap justify-center gap-2 border-b border-[#D9CFB8] bg-[#F7F2E7] px-4 py-3">
-            <button
-              type="button"
-              onClick={() => setPreviewFilter("all")}
-              className={`rounded-full border px-3.5 py-1.5 text-[13px] ${
-                previewFilter === "all"
-                  ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
-                  : "border-[#D9CFB8] bg-white text-[#1B1E19]"
-              }`}
-            >
-              Tout le menu
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => setPreviewFilter(category.id)}
-                className={`rounded-full border px-3.5 py-1.5 text-[13px] ${
-                  previewFilter === category.id
-                    ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
-                    : "border-[#D9CFB8] bg-white text-[#1B1E19]"
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+        <div className="flex min-h-0 flex-1 flex-col bg-[#F4F1EA]">
+          <div
+            className={`flex-1 overflow-y-auto print:hidden ${printFilter ? "hidden" : ""}`}
+          >
+            <DigitalMenu categories={categories} />
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className={printFilter ? "block" : "hidden print:block"}>
             <MenuSheet
               categories={categories}
               categoryFilter={sheetFilter}
@@ -444,7 +476,7 @@ export function MenuAdminApp() {
             <div className="space-y-3.5">
               <label className="block">
                 <span className="mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]">
-                  Nom du plat
+                  {isWineForm ? "Nom du vin" : "Nom du plat"}
                 </span>
                 <Input
                   value={form.name}
@@ -473,19 +505,55 @@ export function MenuAdminApp() {
                 />
               </label>
 
-              <label className="block">
-                <span className="mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]">
-                  Prix (€)
-                </span>
-                <Input
-                  value={form.price}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, price: event.target.value }))
-                  }
-                  placeholder="Ex. 24"
-                  className="border-[#D9CFB8] bg-[#FBF8F1]"
-                />
-              </label>
+              {isWineForm ? (
+                <div>
+                  <p className="mb-1.5 text-[12.5px] font-semibold text-[#6b6a5f]">
+                    Tarifs (€) — laisse vide un format non proposé
+                  </p>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {(
+                      [
+                        ["priceVerre", "Verre"],
+                        ["priceQuart", "1/4"],
+                        ["priceDemi", "1/2"],
+                        ["priceBouteille", "Bouteille"],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <label key={key} className="block">
+                        <span className="mb-1 block text-[11px] text-[#8a8578]">
+                          {label}
+                        </span>
+                        <Input
+                          value={form[key]}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              [key]: event.target.value,
+                            }))
+                          }
+                          placeholder="—"
+                          inputMode="decimal"
+                          className="border-[#D9CFB8] bg-[#FBF8F1]"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <label className="block">
+                  <span className="mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]">
+                    Prix (€)
+                  </span>
+                  <Input
+                    value={form.price}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, price: event.target.value }))
+                    }
+                    placeholder="Ex. 24"
+                    className="border-[#D9CFB8] bg-[#FBF8F1]"
+                  />
+                </label>
+              )}
 
               <label className="block">
                 <span className="mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]">

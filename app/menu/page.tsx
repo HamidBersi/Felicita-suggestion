@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { MenuSheet } from "@/components/menu/menu-sheet";
+import { DigitalMenu } from "@/components/menu/digital-menu";
 import type { MenuCategoryDto } from "@/components/menu/menu-types";
 
 export default function PublicMenuPage() {
@@ -26,11 +26,11 @@ export default function PublicMenuPage() {
   }, []);
 
   return (
-    <main className="min-h-dvh bg-[#F7F2E7] text-[#1B1E19]">
+    <main className="min-h-dvh bg-[#F4F1EA] text-[#1B1E19]">
       {error ? (
         <p className="p-8 text-center text-sm text-red-700">{error}</p>
       ) : (
-        <MenuSheet categories={categories} />
+        <DigitalMenu categories={categories} />
       )}
     </main>
   );

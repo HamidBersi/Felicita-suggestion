@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/require-owner";
-
-const PRICE_PATTERN = /^\d+(?:[.,]\d{1,2})?$/;
+import {
+  headlineFromTiers,
+  parseOptionalPrice,
+  PRICE_PATTERN,
+} from "@/lib/menu-price";
 
 type UpdateItemBody = {
   name?: string;
@@ -10,6 +13,10 @@ type UpdateItemBody = {
   price?: string;
   imageUrl?: string | null;
   isAvailable?: boolean;
+  priceVerre?: string | null;
+  priceQuart?: string | null;
+  priceDemi?: string | null;
+  priceBouteille?: string | null;
 };
 
 type RouteContext = {
@@ -36,6 +43,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     price?: string;
     imageUrl?: string | null;
     isAvailable?: boolean;
+    priceVerre?: string | null;
+    priceQuart?: string | null;
+    priceDemi?: string | null;
+    priceBouteille?: string | null;
   } = {};
 
   if (typeof input.name === "string") {
@@ -58,6 +69,36 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Prix invalide." }, { status: 400 });
     }
     data.price = price;
+  }
+
+  const wineKeys = [
+    "priceVerre",
+    "priceQuart",
+    "priceDemi",
+    "priceBouteille",
+  ] as const;
+  const sentWine = wineKeys.filter((key) => key in input);
+  if (sentWine.length > 0) {
+    const verre = parseOptionalPrice(input.priceVerre);
+    const quart = parseOptionalPrice(input.priceQuart);
+    const demi = parseOptionalPrice(input.priceDemi);
+    const bouteille = parseOptionalPrice(input.priceBouteille);
+    if (!verre.ok || !quart.ok || !demi.ok || !bouteille.ok) {
+      return NextResponse.json({ error: "Prix invalide." }, { status: 400 });
+    }
+    data.priceVerre = verre.value;
+    data.priceQuart = quart.value;
+    data.priceDemi = demi.value;
+    data.priceBouteille = bouteille.value;
+    const headline = headlineFromTiers({
+      verre: verre.value,
+      quart: quart.value,
+      demi: demi.value,
+      bouteille: bouteille.value,
+    });
+    if (headline) {
+      data.price = headline;
+    }
   }
 
   if ("imageUrl" in input) {
