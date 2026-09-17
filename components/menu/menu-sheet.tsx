@@ -48,8 +48,6 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
             <th key={column.key} className="w-[4.8rem] pb-1.5 pr-2 text-left font-medium">
               {column.label}
             </th>
-              {column.label}
-            </th>
           ))}
         </tr>
       </thead>
