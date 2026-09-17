@@ -18,8 +18,8 @@ export default function MenuPortalPage() {
         <PortalCard
           href="/admin/menu"
           emoji="🔐"
-          title="Espace patron"
-          description="Modifier la carte, imprimer, QR — code PIN."
+          title="Espace gérant"
+          description="Modifier la carte, imprimer, QR."
         />
       </nav>
     </PortalShell>

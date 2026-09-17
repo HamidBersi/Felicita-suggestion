@@ -8,12 +8,15 @@ type HScrollRowProps = {
   className?: string;
   /** Couleur du dégradé (doit coller au fond sticky) */
   fadeFromClass?: string;
+  /** lg = défile jusqu’à tablette, wrap au desktop. never = toujours une ligne. */
+  wrapAt?: "lg" | "never";
 };
 
 export function HScrollRow({
   children,
   className = "",
   fadeFromClass = "from-[#F4F1EA]",
+  wrapAt = "lg",
 }: HScrollRowProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -48,7 +51,9 @@ export function HScrollRow({
     <div className="relative min-w-0">
       <div
         ref={scrollerRef}
-        className={`flex flex-nowrap overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible ${className}`}
+        className={`flex flex-nowrap overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+          wrapAt === "lg" ? "lg:flex-wrap lg:overflow-visible" : ""
+        } ${className}`}
       >
         {children}
       </div>
@@ -57,7 +62,9 @@ export function HScrollRow({
           type="button"
           aria-label="Faire défiler vers la droite"
           onClick={scrollAhead}
-          className={`absolute inset-y-0 right-0 z-10 flex w-11 items-center justify-end bg-gradient-to-l ${fadeFromClass} to-transparent pr-0.5 md:hidden`}
+          className={`absolute inset-y-0 right-0 z-10 flex w-11 items-center justify-end bg-gradient-to-l ${fadeFromClass} to-transparent pr-0.5 ${
+            wrapAt === "lg" ? "lg:hidden" : ""
+          }`}
         >
           <span className="flex size-7 items-center justify-center rounded-full bg-[#1B1E19]/85 text-[#FBF8F1] shadow-sm">
             <ChevronRight className="size-4" strokeWidth={2.25} />

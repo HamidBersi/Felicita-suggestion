@@ -18,6 +18,7 @@ import {
   type MenuFamilyId,
 } from "@/components/menu/menu-groups";
 import type { MenuCategoryDto } from "@/components/menu/menu-types";
+import { HScrollRow } from "@/components/menu/h-scroll-row";
 
 const FAMILY_ICONS: Record<MenuFamily["id"], typeof Wine> = {
   aperitivo: Wine,
@@ -37,6 +38,7 @@ type MenuFamilyBarProps = {
   categoryNames: string[];
   /** En édition : pas de sous-onglet « Tout », une catégorie toujours choisie */
   showSubAllTab?: boolean;
+  fadeFromClass?: string;
 };
 
 export function categoriesForFamily(
@@ -72,6 +74,7 @@ export function MenuFamilyBar({
   onSubCategoryChange,
   categoryNames,
   showSubAllTab = true,
+  fadeFromClass = "from-[#F4F1EA]",
 }: MenuFamilyBarProps) {
   const activeFamily =
     familyId === "all"
@@ -86,51 +89,76 @@ export function MenuFamilyBar({
 
   const showSubRow = subNames.length > 0;
 
+  const familyChips = (
+    <>
+      <FamilyChip
+        active={familyId === "all"}
+        icon={LayoutGrid}
+        label="Tout"
+        onClick={() => onFamilyChange("all")}
+      />
+      {MENU_FAMILIES.map((family) => {
+        const Icon = FAMILY_ICONS[family.id];
+        return (
+          <FamilyChip
+            key={family.id}
+            active={familyId === family.id}
+            icon={Icon}
+            label={family.navLabel ?? family.label}
+            title={family.label}
+            onClick={() => onFamilyChange(family.id)}
+          />
+        );
+      })}
+    </>
+  );
+
+  const subTabs = showSubRow ? (
+    <>
+      {showSubAllTab ? (
+        <SubTab
+          label="Tout"
+          selected={subCategoryName === null}
+          onClick={() => onSubCategoryChange(null)}
+        />
+      ) : null}
+      {subNames.map((name) => (
+        <SubTab
+          key={name}
+          label={activeFamily ? chipLabel(activeFamily, name) : name}
+          selected={subCategoryName === name}
+          onClick={() => onSubCategoryChange(name)}
+        />
+      ))}
+    </>
+  ) : null;
+
   return (
     <div>
-      <div className="flex flex-wrap gap-1.5">
-        <FamilyChip
-          active={familyId === "all"}
-          icon={LayoutGrid}
-          label="Tout"
-          onClick={() => onFamilyChange("all")}
-        />
-        {MENU_FAMILIES.map((family) => {
-          const Icon = FAMILY_ICONS[family.id];
-          return (
-            <FamilyChip
-              key={family.id}
-              active={familyId === family.id}
-              icon={Icon}
-              label={family.navLabel ?? family.label}
-              title={family.label}
-              onClick={() => onFamilyChange(family.id)}
-            />
-          );
-        })}
+      <div className="lg:hidden">
+        <HScrollRow
+          wrapAt="never"
+          className="items-center gap-1.5 pr-10"
+          fadeFromClass={fadeFromClass}
+        >
+          {familyChips}
+          {subTabs ? (
+            <>
+              <span className="mx-1 h-4 w-px shrink-0 bg-[#e4dfd4]" aria-hidden />
+              {subTabs}
+            </>
+          ) : null}
+        </HScrollRow>
       </div>
 
-      {showSubRow ? (
-        <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
-          <div className="flex flex-wrap gap-x-1 gap-y-0">
-            {showSubAllTab ? (
-              <SubTab
-                label="Tout"
-                selected={subCategoryName === null}
-                onClick={() => onSubCategoryChange(null)}
-              />
-            ) : null}
-            {subNames.map((name) => (
-              <SubTab
-                key={name}
-                label={activeFamily ? chipLabel(activeFamily, name) : name}
-                selected={subCategoryName === name}
-                onClick={() => onSubCategoryChange(name)}
-              />
-            ))}
+      <div className="hidden lg:block">
+        <div className="flex flex-wrap gap-1.5">{familyChips}</div>
+        {showSubRow ? (
+          <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
+            <div className="flex flex-wrap gap-x-1 gap-y-0">{subTabs}</div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -153,7 +181,7 @@ function FamilyChip({
       type="button"
       title={title}
       onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
         active
           ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
           : "border-[#e4dfd4] bg-[#fbf8f1] text-[#3d3a32] hover:border-[#1E3A2F]/25"

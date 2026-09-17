@@ -68,8 +68,8 @@ export function AdminGate({ children }: AdminGateProps) {
 
   if (isAuthenticated === null) {
     return (
-      <div className="flex min-h-full flex-1 items-center justify-center bg-gradient-to-b from-stone-100 to-stone-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+      <div className="flex min-h-full flex-1 items-center justify-center bg-[#F7F2E7]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#B68A3D] border-t-transparent" />
       </div>
     );
   }

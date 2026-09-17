@@ -110,7 +110,7 @@ export function TitleAutocomplete({
             <li key={hit.id}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left hover:bg-sky-50"
+                className="w-full px-3 py-2 text-left hover:bg-[#1E3A2F]/5"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => handleSelect(hit)}
               >

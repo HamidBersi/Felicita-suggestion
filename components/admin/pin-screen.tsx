@@ -140,31 +140,22 @@ export function PinScreen({
   };
 
   return (
-    <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-gradient-to-b from-stone-100 to-stone-50 p-6">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-100/80 via-transparent to-transparent"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-sky-400/20 blur-3xl"
-      />
-
+    <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-[#F7F2E7] p-6">
       <div className="relative w-full max-w-md">
-        <div className="rounded-3xl border border-white/60 bg-white/80 p-8 shadow-2xl shadow-sky-900/10 backdrop-blur-xl">
+        <div className="rounded-xl border border-[#D9CFB8] bg-white p-8 shadow-none">
           <div className="mb-8 text-center">
             <Image
               src="/icons/icon-192.png"
               alt="Logo Felicita"
               width={56}
               height={56}
-              className="mx-auto mb-4 size-14 rounded-2xl object-cover shadow-lg shadow-sky-500/25 ring-2 ring-sky-100"
+              className="mx-auto mb-4 size-14 rounded-xl object-cover ring-1 ring-[#D9CFB8]"
               priority
             />
-            <h1 className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold tracking-tight text-stone-900">
+            <h1 className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold tracking-tight text-[#1B1E19]">
               Felicita
             </h1>
-            <p className="mt-2 text-sm text-stone-500">{subtitle}</p>
+            <p className="mt-2 text-sm text-[#6b6a5f]">{subtitle}</p>
           </div>
 
           <div className="space-y-6">
@@ -185,9 +176,9 @@ export function PinScreen({
                   onPaste={handlePaste}
                   aria-label={`Chiffre ${index + 1}`}
                   className={cn(
-                    "h-12 w-10 rounded-xl border border-stone-200 bg-white text-center text-lg font-semibold tracking-widest shadow-sm transition-all outline-none sm:h-14 sm:w-12",
-                    "focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20",
-                    digit && "border-sky-500/50 bg-sky-50/80",
+                    "h-12 w-10 rounded-md border border-[#D9CFB8] bg-[#FBF8F1] text-center text-lg font-semibold tracking-widest outline-none sm:h-14 sm:w-12",
+                    "focus:border-[#1E3A2F] focus:ring-2 focus:ring-[#1E3A2F]/15",
+                    digit && "border-[#1E3A2F]/40 bg-white",
                   )}
                 />
               ))}
@@ -195,7 +186,7 @@ export function PinScreen({
 
             <Button
               type="button"
-              className="h-11 w-full rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 text-white shadow-lg shadow-sky-500/25 hover:from-sky-600 hover:to-sky-700"
+              className="h-11 w-full rounded-md bg-[#B68A3D] font-semibold text-[#1E3A2F] hover:bg-[#D8B871]"
               onClick={() => void validate(digits.join(""))}
               disabled={isSubmitting}
             >

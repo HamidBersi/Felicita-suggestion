@@ -19,7 +19,7 @@ export default function SuggestionsPortalPage() {
           href="/admin"
           emoji="🔐"
           title="Espace admin"
-          description="Créer et modifier le tableau du jour — code PIN."
+          description="Créer et modifier le tableau du jour."
         />
       </nav>
     </PortalShell>

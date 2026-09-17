@@ -68,8 +68,8 @@ export function OwnerGate({ children }: OwnerGateProps) {
 
   if (isAuthenticated === null) {
     return (
-      <div className="flex min-h-full flex-1 items-center justify-center bg-gradient-to-b from-stone-100 to-stone-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+      <div className="flex min-h-full flex-1 items-center justify-center bg-[#F7F2E7]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#B68A3D] border-t-transparent" />
       </div>
     );
   }
@@ -81,7 +81,7 @@ export function OwnerGate({ children }: OwnerGateProps) {
           onSuccess={handleSuccess}
           loginUrl="/api/owner/login"
           authStorageKey={OWNER_AUTH_KEY}
-          subtitle="Accès Menu — Patron uniquement"
+          subtitle="Accès Menu — Gérant uniquement"
         />
         <Toaster richColors position="top-center" />
       </>

@@ -169,7 +169,7 @@ function LabelColorPicker({
     >
       <button
         type="button"
-        className="flex h-10 items-center gap-1.5 rounded-r-lg border border-sky-200/70 border-l-0 bg-sky-50/80 px-3 transition-colors hover:bg-sky-100/80"
+        className="flex h-10 items-center gap-1.5 rounded-r-md border border-[#D9CFB8] border-l-0 bg-[#FBF8F1] px-3 transition-colors hover:bg-[#1E3A2F]/10"
         aria-label="Choisir la couleur du badge"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
@@ -207,13 +207,13 @@ function LabelColorPicker({
 }
 
 const fieldLabelClass =
-  "text-xs font-bold uppercase tracking-[0.14em] text-stone-900";
+  "mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]";
 
 const inputClass =
-  "h-10 border-sky-200/70 bg-sky-50/80 focus-visible:border-sky-300 focus-visible:ring-sky-200/50";
+  "h-10 border-[#D9CFB8] bg-[#FBF8F1] text-[#1B1E19] focus-visible:border-[#1E3A2F]/40 focus-visible:ring-[#1E3A2F]/15";
 
 const cardHeaderClass =
-  "flex w-full flex-row items-center justify-between rounded-t-2xl border-b border-sky-200 bg-sky-100/95 px-5 py-4";
+  "flex w-full flex-row items-center justify-between rounded-t-[10px] border-b border-[#D9CFB8] bg-[#FBF8F1] px-4 py-3";
 
 type RowCardProps = {
   row: SuggestionRow;
@@ -235,27 +235,26 @@ function RowCard({
   dragHandle,
 }: RowCardProps) {
   return (
-    <Card className="gap-0 overflow-visible rounded-2xl border-stone-200/80 bg-white p-0 shadow-sm ring-1 ring-stone-900/5 transition-shadow hover:shadow-md">
+    <Card className="gap-0 overflow-visible rounded-[10px] border border-[#D9CFB8] bg-white p-0 shadow-none">
       <CardHeader className={`${cardHeaderClass} overflow-hidden`}>
         <div className="flex items-center gap-2.5">
           {dragHandle ?? (
-            <span className="rounded-lg border border-sky-200/70 bg-white p-1.5 text-sky-400 shadow-sm">
+            <span className="rounded-md border border-[#D9CFB8] bg-white p-1.5 text-[#8a8578]">
               <GripVertical className="size-4" />
             </span>
           )}
-          <CardTitle className="text-xl font-bold tracking-tight text-stone-900">
+          <CardTitle className="font-[family-name:var(--font-cormorant)] text-[22px] font-semibold tracking-tight text-[#1B1E19]">
             Suggestion {index + 1}
           </CardTitle>
         </div>
-        <Button
+        <button
           type="button"
-          variant="destructive"
-          size="sm"
+          className="rounded px-2 py-1 text-[12.5px] font-semibold text-[#6E2A2A] hover:bg-[#6E2A2A]/10 disabled:opacity-40"
           onClick={() => onRemove(row.id)}
           disabled={!canRemove}
         >
           Supprimer
-        </Button>
+        </button>
       </CardHeader>
 
       <CardContent className="relative space-y-4 overflow-visible px-5 py-4">
@@ -303,7 +302,7 @@ function RowCard({
           <div className="space-y-1.5">
             <label htmlFor={`label-${index}`} className={fieldLabelClass}>
               Label{" "}
-              <span className="font-normal normal-case tracking-normal text-sky-500/80">
+              <span className="font-normal text-[#8a8578]">
                 (optionnel)
               </span>
             </label>
@@ -362,7 +361,7 @@ function SortableRow(props: SortableRowProps) {
         dragHandle={
           <button
             type="button"
-            className="cursor-grab touch-none rounded-lg border border-sky-200/70 bg-white p-1.5 text-sky-400 shadow-sm hover:border-sky-300 hover:text-sky-600 active:cursor-grabbing"
+            className="cursor-grab touch-none rounded-md border border-[#D9CFB8] bg-white p-1.5 text-[#8a8578] hover:border-[#1E3A2F]/30 hover:text-[#1E3A2F] active:cursor-grabbing"
             aria-label="Déplacer la suggestion"
             {...attributes}
             {...listeners}
@@ -565,54 +564,51 @@ function AdminPanel() {
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-stone-100 to-stone-50 px-6 py-10 font-sans tracking-tight antialiased">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-stone-900">Administration</h1>
-            <p className="mt-2 text-stone-600">
-              Gérez les suggestions affichées au restaurant.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {hasStoredSuggestions ? (
-              <Button
-                asChild
-                variant="outline"
-                className="h-10 shrink-0 rounded-full border-sky-200 bg-white px-5 font-semibold text-sky-900 shadow-sm hover:border-sky-300 hover:bg-sky-50"
-              >
-                <Link href="/display">
-                  <Monitor className="size-4" />
-                  Affichage
-                </Link>
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                disabled
-                variant="outline"
-                className="h-10 shrink-0 rounded-full border-stone-200 bg-stone-100 px-5 font-semibold text-stone-400 shadow-sm"
-              >
+    <div className="flex min-h-dvh flex-col bg-[#F7F2E7] text-[#1B1E19]">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 bg-[#1E3A2F] px-5 py-3.5 text-[#FBF8F1]">
+        <div className="flex items-baseline gap-2.5">
+          <span className="font-[family-name:var(--font-cormorant)] text-[22px] tracking-wide">
+            Suggestions
+          </span>
+          <span className="text-xs tracking-wide text-[#D8B871]">espace admin</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {hasStoredSuggestions ? (
+            <Button
+              asChild
+              variant="outline"
+              className="border-[#D8B871]/70 bg-transparent text-[#FBF8F1] hover:bg-white/10 hover:text-white"
+            >
+              <Link href="/display">
                 <Monitor className="size-4" />
                 Affichage
-              </Button>
-            )}
+              </Link>
+            </Button>
+          ) : (
             <Button
               type="button"
+              disabled
               variant="outline"
-              className="h-10 shrink-0 rounded-full border-stone-200 bg-white px-5 font-semibold text-stone-700 shadow-sm hover:border-stone-300 hover:bg-stone-50"
-              onClick={logout}
+              className="border-white/20 bg-transparent text-white/40"
             >
-              <LogOut className="size-4" />
-              Déconnexion
+              <Monitor className="size-4" />
+              Affichage
             </Button>
-          </div>
-        </header>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            className="border-[#D8B871]/50 bg-transparent text-[#FBF8F1] hover:bg-white/10 hover:text-white"
+            onClick={logout}
+          >
+            <LogOut className="size-4" />
+            Quitter
+          </Button>
+        </div>
+      </header>
 
-        {/* Formulaire */}
+      <div className="mx-auto w-full max-w-4xl flex-1 space-y-8 p-6 sm:p-8">
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-stone-800">Formulaire</h2>
-
           {mounted ? (
             <SortableList
               suggestions={suggestions}
@@ -637,77 +633,74 @@ function AdminPanel() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-sky-100 bg-sky-50/50 p-3">
-            <Button
+          <div className="flex flex-wrap items-center gap-2">
+            <button
               type="button"
-              variant="outline"
-              className="h-10 rounded-full border-sky-200 bg-white px-5 font-semibold text-sky-900 shadow-sm hover:border-sky-300 hover:bg-sky-50"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#D9CFB8] bg-white px-4 py-2.5 text-[13.5px] font-semibold text-[#1B1E19] transition hover:bg-[#1E3A2F]/5"
               onClick={addRow}
             >
               <Plus className="size-4" />
               Ajouter une ligne
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="secondary"
-              className="h-10 rounded-full bg-white px-5 font-semibold text-sky-800 shadow-sm ring-1 ring-sky-200 hover:bg-sky-50"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#D9CFB8] bg-white px-4 py-2.5 text-[13.5px] font-semibold text-[#1B1E19] transition hover:bg-[#1E3A2F]/5"
               onClick={handlePreview}
             >
               <Eye className="size-4" />
               Prévisualiser
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              className="h-10 rounded-full bg-sky-600 px-6 font-semibold text-white shadow-md hover:bg-sky-700"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#B68A3D] px-4 py-2.5 text-[13.5px] font-semibold text-[#1E3A2F] transition hover:bg-[#D8B871]"
               onClick={handleConfirm}
             >
               <Check className="size-4" />
               Confirmer
-            </Button>
+            </button>
           </div>
         </section>
 
-        {/* Aperçu */}
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-stone-800">Aperçu</h2>
+          <h2 className="font-[family-name:var(--font-cormorant)] text-[28px] font-semibold">
+            Aperçu
+          </h2>
 
           {preview.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-10 text-center text-stone-500">
-                Cliquez sur &quot;Prévisualiser&quot; pour voir le résultat.
-              </CardContent>
-            </Card>
+            <div className="rounded-[10px] border border-dashed border-[#D9CFB8] px-8 py-10 text-center text-[#6b6a5f]">
+              Cliquez sur &quot;Prévisualiser&quot; pour voir le résultat.
+            </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
               {preview.map((row, index) => (
-                <Card
+                <article
                   key={`preview-${index}`}
-                  className="flex flex-col bg-gradient-to-br from-stone-900 to-stone-800 text-white ring-white/10"
+                  className="flex flex-col rounded-[10px] border border-[#D9CFB8] bg-white px-4 py-3.5"
                 >
-                  <CardContent className="flex flex-1 flex-col pt-6">
-                    {row.label.trim() && (
-                      <Badge
-                        className={`mb-4 w-fit ${getLabelBadgeClass(row.labelColor)}`}
-                      >
-                        {row.label}
-                      </Badge>
-                    )}
+                  {row.label.trim() ? (
+                    <Badge
+                      className={`mb-3 w-fit ${getLabelBadgeClass(row.labelColor)}`}
+                    >
+                      {row.label}
+                    </Badge>
+                  ) : null}
 
-                    <h3 className="text-xl font-bold">{row.title}</h3>
+                  <h3 className="font-[family-name:var(--font-cormorant)] text-[19px] font-semibold leading-snug text-[#1B1E19]">
+                    {row.title}
+                  </h3>
 
-                    {row.description.trim() && (
-                      <p className="mt-2 flex-1 text-sm leading-relaxed text-stone-300">
-                        {row.description}
-                      </p>
-                    )}
+                  {row.description.trim() ? (
+                    <p className="mt-1.5 flex-1 text-sm leading-snug text-[#6b6a5f]">
+                      {row.description}
+                    </p>
+                  ) : null}
 
-                    {row.price.trim() && (
-                      <p className="mt-4 text-2xl font-bold text-amber-400">
-                        {formatPrice(row.price)}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                  {row.price.trim() ? (
+                    <p className="mt-3 font-semibold text-[#1E3A2F]">
+                      {formatPrice(row.price)}
+                    </p>
+                  ) : null}
+                </article>
               ))}
             </div>
           )}
