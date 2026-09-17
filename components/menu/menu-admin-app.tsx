@@ -651,7 +651,9 @@ export function MenuAdminApp() {
                       setForm((current) => ({ ...current, name: event.target.value }))
                     }
                     placeholder="Ex. Filet de bar rôti"
-                    className="border-[#D9CFB8] bg-[#FBF8F1] pr-12"
+                    className={`border-[#D9CFB8] bg-[#FBF8F1] pr-12 ${
+                      form.emoji ? "pl-10" : ""
+                    }`}
                   />
                   <DishEmojiSelect
                     value={form.emoji}

@@ -13,10 +13,11 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm prisma:generate && next build",
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "NODE_OPTIONS='--experimental-require-module' node node_modules/prisma/build/index.js generate",
+    "prisma:migrate": "NODE_OPTIONS='--experimental-require-module' node node_modules/prisma/build/index.js migrate deploy",
+    "build": "pnpm prisma:generate && pnpm prisma:migrate && next build",
     "menu:seed": "tsx scripts/seed-menu.ts"
   },
   "dependencies": {
