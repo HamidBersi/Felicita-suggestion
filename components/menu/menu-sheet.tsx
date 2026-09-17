@@ -111,7 +111,6 @@ function DishBlock({ item }: { item: MenuItemDto }) {
 
 function CategoryBlock({
   category,
-  continuation = false,
 }: {
   category: MenuCategoryDto;
   continuation?: boolean;
@@ -125,7 +124,6 @@ function CategoryBlock({
       <h2 className="menu-cat-title mb-3 flex items-center gap-3 font-[family-name:var(--font-cormorant)] text-[28px] font-bold italic leading-none text-[#8F6A24]">
         <span>
           {category.name}
-          {continuation ? " (suite)" : ""}
         </span>
         <span className="h-px flex-1 bg-[#D9CFB8]" aria-hidden />
       </h2>
@@ -133,7 +131,7 @@ function CategoryBlock({
       {asWineTable ? (
         <WineTable items={wineItems} />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5 print:space-y-1.5">
           {category.items.map((item) => (
             <DishBlock key={item.id} item={item} />
           ))}
@@ -180,7 +178,7 @@ export function MenuSheet({
 
   if (printSlices && printSlices.length > 0) {
     return (
-      <div className="menu-sheet menu-print-pages mx-auto w-full max-w-[720px] px-10 py-10 sm:px-12 print:max-w-none print:p-0">
+      <div className="menu-sheet menu-print-pages mx-auto w-full px-4 py-6 sm:px-6 print:max-w-none print:p-0">
         {printSlices.map((slice) => (
           <section key={slice.page} className="menu-print-page">
             {slice.isCover ? (

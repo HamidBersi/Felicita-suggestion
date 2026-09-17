@@ -185,6 +185,17 @@ export function slicePrintPagesFromDom(
       ...categoryEl.querySelectorAll<HTMLElement>("[data-item-id]"),
     ];
     const gap = 8;
+    const orphanMin = 2;
+
+    function packHeight(fromIndex: number, count: number): number {
+      let height = headingHeight;
+      for (let offset = 0; offset < count; offset += 1) {
+        const el = blockEls[fromIndex + offset];
+        if (!el) break;
+        height += el.offsetHeight + gap;
+      }
+      return height;
+    }
 
     let startedOnThisPage = false;
 
@@ -193,6 +204,18 @@ export function slicePrintPagesFromDom(
       const item = itemsById.get(block.dataset.itemId ?? "");
       if (!item) continue;
       const blockHeight = block.offsetHeight + gap;
+      const remaining = blockEls.length - index;
+
+      if (
+        !startedOnThisPage &&
+        used > 0 &&
+        index === 0 &&
+        remaining >= orphanMin &&
+        used + packHeight(index, orphanMin) > pageHeightPx
+      ) {
+        flush();
+      }
+
       const needHeading = !startedOnThisPage;
       const addHeight = (needHeading ? headingHeight : 0) + blockHeight;
 
@@ -216,7 +239,7 @@ export function slicePrintPagesFromDom(
       used += blockHeight;
     }
 
-    used += 20;
+    used += 14;
   }
 
   flush();

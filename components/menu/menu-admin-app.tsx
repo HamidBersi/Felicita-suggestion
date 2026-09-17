@@ -365,12 +365,7 @@ export function MenuAdminApp() {
     const selected = estimatedPages.filter((slice) =>
       printSelection.includes(slice.page),
     );
-    const printingAll =
-      estimatedPages.length > 0 &&
-      printSelection.length === estimatedPages.length;
-    setPrintSlices(
-      printingAll ? [] : appendMissingPrintItems(selected, categories),
-    );
+    setPrintSlices(appendMissingPrintItems(selected, categories));
     setView("preview");
     setPrintOpen(false);
 
@@ -384,9 +379,7 @@ export function MenuAdminApp() {
       if (printSlices !== null && estimatedPages.length > 0) {
         rememberPrintedPages(
           estimatedPages,
-          printSlices.length === 0
-            ? estimatedPages.map((slice) => slice.page)
-            : printSlices.map((slice) => slice.page),
+          printSlices.map((slice) => slice.page),
         );
       }
       setPrintSlices(null);
@@ -829,8 +822,8 @@ export function MenuAdminApp() {
       {printOpen ? (
         <div className="menu-admin-chrome fixed inset-0 z-50 flex items-center justify-center bg-[#1B1E19]/55 p-5">
           <div className="pointer-events-none fixed top-0 -left-[240vw] -z-10">
-            <div ref={pageHeightRef} className="h-[269mm] w-[166mm]" />
-            <div ref={measureRef} className="w-[166mm]">
+            <div ref={pageHeightRef} className="h-[269mm] w-[182mm]" />
+            <div ref={measureRef} className="w-[182mm]">
               <MenuSheet categories={categories} measure />
             </div>
           </div>
