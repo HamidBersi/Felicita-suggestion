@@ -1,10 +1,14 @@
 "use client";
 
-import { LogOut, Menu, Plus, Printer, QrCode, X } from "lucide-react";
+import { LogOut, Menu, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { isWineCategoryName } from "@/lib/menu-price";
+import {
+  isWineCategoryName,
+  normalizeStoredPrice,
+  sanitizePriceInput,
+} from "@/lib/menu-price";
 import { DishTitle } from "@/components/menu/dish-title";
 import { DishEmojiSelect } from "@/components/menu/dish-emoji-select";
 import { DISH_EMOJI_OPTIONS } from "@/lib/dish-emoji";
@@ -22,6 +26,7 @@ import {
   modifiedPrintPages,
   pagePreviewLabel,
   rememberPrintedPages,
+  appendMissingPrintItems,
   slicePrintPagesFromDom,
   type PrintPageSlice,
 } from "@/components/menu/print-pagination";
@@ -83,10 +88,12 @@ export function MenuAdminApp() {
   const [qrOpen, setQrOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [menuPublicUrl, setMenuPublicUrl] = useState("/menu");
+  const [pendingDelete, setPendingDelete] = useState<MenuItemDto | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadMenu = useCallback(async () => {
     try {
-      const response = await fetch("/api/menu");
+      const response = await fetch("/api/menu", { cache: "no-store" });
       if (!response.ok) {
         toast.error("Impossible de charger le menu.");
         return;
@@ -113,6 +120,15 @@ export function MenuAdminApp() {
   useEffect(() => {
     setMenuPublicUrl(`${window.location.origin}/menu`);
   }, []);
+
+  useEffect(() => {
+    if (!pendingDelete) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape" && !deleting) setPendingDelete(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pendingDelete, deleting]);
 
   const selectedCategory = useMemo(
     () => categories.find((category) => category.id === selectedCategoryId) ?? null,
@@ -158,12 +174,12 @@ export function MenuAdminApp() {
     setForm({
       name: item.name,
       description: item.description ?? "",
-      price: item.price,
+      price: normalizeStoredPrice(item.price) ?? item.price,
       imageUrl: item.imageUrl ?? "",
-      priceVerre: item.priceVerre ?? "",
-      priceQuart: item.priceQuart ?? "",
-      priceDemi: item.priceDemi ?? "",
-      priceBouteille: item.priceBouteille ?? "",
+      priceVerre: normalizeStoredPrice(item.priceVerre ?? "") ?? "",
+      priceQuart: normalizeStoredPrice(item.priceQuart ?? "") ?? "",
+      priceDemi: normalizeStoredPrice(item.priceDemi ?? "") ?? "",
+      priceBouteille: normalizeStoredPrice(item.priceBouteille ?? "") ?? "",
       emoji: item.emoji ?? "",
     });
   }
@@ -177,17 +193,22 @@ export function MenuAdminApp() {
   async function saveDish() {
     const name = form.name.trim();
     const wineTiers = {
-      priceVerre: form.priceVerre.trim(),
-      priceQuart: form.priceQuart.trim(),
-      priceDemi: form.priceDemi.trim(),
-      priceBouteille: form.priceBouteille.trim(),
+      priceVerre: normalizeStoredPrice(form.priceVerre) ?? "",
+      priceQuart: normalizeStoredPrice(form.priceQuart) ?? "",
+      priceDemi: normalizeStoredPrice(form.priceDemi) ?? "",
+      priceBouteille: normalizeStoredPrice(form.priceBouteille) ?? "",
     };
     const price = isWineForm
       ? wineTiers.priceVerre ||
         wineTiers.priceBouteille ||
         wineTiers.priceQuart ||
         wineTiers.priceDemi
-      : form.price.trim();
+      : (normalizeStoredPrice(form.price) ?? "");
+
+    if (!isWineForm && form.price.trim() && !normalizeStoredPrice(form.price)) {
+      toast.error("Le prix doit être un nombre, ex. 9,90.");
+      return;
+    }
 
     if (!name || !price) {
       toast.error(
@@ -260,11 +281,11 @@ export function MenuAdminApp() {
     }
   }
 
-  async function deleteDish(item: MenuItemDto) {
-    if (!confirm(`Supprimer « ${item.name} » ?`)) return;
-
+  async function confirmDelete() {
+    if (!pendingDelete || deleting) return;
+    setDeleting(true);
     try {
-      const response = await fetch(`/api/menu/items/${item.id}`, {
+      const response = await fetch(`/api/menu/items/${pendingDelete.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -273,9 +294,12 @@ export function MenuAdminApp() {
         return;
       }
       toast.success("Plat supprimé");
+      setPendingDelete(null);
       await loadMenu();
     } catch {
       toast.error("Erreur réseau.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -341,7 +365,12 @@ export function MenuAdminApp() {
     const selected = estimatedPages.filter((slice) =>
       printSelection.includes(slice.page),
     );
-    setPrintSlices(selected);
+    const printingAll =
+      estimatedPages.length > 0 &&
+      printSelection.length === estimatedPages.length;
+    setPrintSlices(
+      printingAll ? [] : appendMissingPrintItems(selected, categories),
+    );
     setView("preview");
     setPrintOpen(false);
 
@@ -352,10 +381,12 @@ export function MenuAdminApp() {
 
   useEffect(() => {
     function onAfterPrint() {
-      if (printSlices && estimatedPages.length > 0) {
+      if (printSlices !== null && estimatedPages.length > 0) {
         rememberPrintedPages(
           estimatedPages,
-          printSlices.map((slice) => slice.page),
+          printSlices.length === 0
+            ? estimatedPages.map((slice) => slice.page)
+            : printSlices.map((slice) => slice.page),
         );
       }
       setPrintSlices(null);
@@ -603,7 +634,7 @@ export function MenuAdminApp() {
                           <button
                             type="button"
                             className="rounded px-2 py-1 text-[12.5px] font-semibold text-[#6E2A2A] hover:bg-[#6E2A2A]/10"
-                            onClick={() => void deleteDish(item)}
+                            onClick={() => setPendingDelete(item)}
                           >
                             Supprimer
                           </button>
@@ -619,14 +650,20 @@ export function MenuAdminApp() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col bg-[#F4F1EA]">
           <div
-            className={`flex-1 overflow-y-auto print:hidden ${printSlices ? "hidden" : ""}`}
+            className={`flex-1 overflow-y-auto print:hidden ${printSlices !== null ? "hidden" : ""}`}
           >
             <DigitalMenu categories={categories} />
           </div>
-          <div className={printSlices ? "block bg-white" : "hidden bg-white print:block"}>
+          <div
+            className={
+              printSlices !== null ? "block bg-white" : "hidden bg-white print:block"
+            }
+          >
             <MenuSheet
               categories={categories}
-              printSlices={printSlices}
+              printSlices={
+                printSlices && printSlices.length > 0 ? printSlices : null
+              }
             />
           </div>
         </div>
@@ -704,8 +741,17 @@ export function MenuAdminApp() {
                           onChange={(event) =>
                             setForm((current) => ({
                               ...current,
-                              [key]: event.target.value,
+                              [key]: sanitizePriceInput(event.target.value),
                             }))
+                          }
+                          onBlur={() =>
+                            setForm((current) => {
+                              const next = normalizeStoredPrice(current[key]);
+                              return {
+                                ...current,
+                                [key]: next ?? (current[key].trim() ? current[key] : ""),
+                              };
+                            })
                           }
                           placeholder="—"
                           inputMode="decimal"
@@ -723,9 +769,19 @@ export function MenuAdminApp() {
                   <Input
                     value={form.price}
                     onChange={(event) =>
-                      setForm((current) => ({ ...current, price: event.target.value }))
+                      setForm((current) => ({
+                        ...current,
+                        price: sanitizePriceInput(event.target.value),
+                      }))
                     }
-                    placeholder="Ex. 24"
+                    onBlur={() =>
+                      setForm((current) => ({
+                        ...current,
+                        price: normalizeStoredPrice(current.price) ?? current.price,
+                      }))
+                    }
+                    placeholder="Ex. 9,90"
+                    inputMode="decimal"
                     className="border-[#D9CFB8] bg-[#FBF8F1]"
                   />
                 </label>
@@ -905,6 +961,60 @@ export function MenuAdminApp() {
                 className="rounded-md bg-[#1E3A2F] px-4 py-2 text-[13.5px] font-semibold text-[#FBF8F1]"
               >
                 Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingDelete ? (
+        <div
+          className="menu-admin-chrome fixed inset-0 z-[60] flex items-center justify-center bg-[#1B1E19]/60 p-5 backdrop-blur-[2px]"
+          onClick={() => {
+            if (!deleting) setPendingDelete(null);
+          }}
+        >
+          <div
+            role="alertdialog"
+            aria-labelledby="delete-dish-title"
+            aria-describedby="delete-dish-copy"
+            className="w-full max-w-[400px] rounded-2xl border border-[#E8D5D0] bg-[#FBF8F1] p-6 shadow-[0_24px_60px_rgba(27,30,25,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-[#6E2A2A]/10 text-[#6E2A2A]">
+              <Trash2 className="size-5" strokeWidth={2.25} />
+            </div>
+            <h3
+              id="delete-dish-title"
+              className="mt-4 font-[family-name:var(--font-cormorant)] text-[26px] leading-tight font-semibold text-[#1B1E19]"
+            >
+              Supprimer ce plat ?
+            </h3>
+            <p
+              className="mt-2 font-[family-name:var(--font-cormorant)] text-[20px] italic leading-snug text-[#8F6A24]"
+            >
+              {pendingDelete.name}
+            </p>
+            <p id="delete-dish-copy" className="mt-3 text-[13.5px] leading-relaxed text-[#6b6a5f]">
+              Cette action est définitive. Il disparaîtra de la carte digitale et de
+              l’imprimé.
+            </p>
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setPendingDelete(null)}
+                className="rounded-md border border-[#D9CFB8] bg-white px-4 py-2.5 text-[13.5px] font-medium text-[#1B1E19] hover:bg-[#F4F1EA] disabled:opacity-60"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void confirmDelete()}
+                className="rounded-md bg-[#6E2A2A] px-4 py-2.5 text-[13.5px] font-semibold text-[#FBF8F1] hover:bg-[#5A2222] disabled:opacity-60"
+              >
+                {deleting ? "Suppression…" : "Oui, supprimer"}
               </button>
             </div>
           </div>

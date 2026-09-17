@@ -11,6 +11,7 @@ import {
 import { MenuFamilyBar } from "@/components/menu/menu-family-bar";
 import { DishTitle } from "@/components/menu/dish-title";
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import { isListedOnMenu } from "@/components/menu/menu-types";
 import {
   formatEuro,
   hasWineTiers,
@@ -61,7 +62,8 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
       .map((category) => ({
         ...category,
         items: category.items.filter(
-          (item) => item.isAvailable && itemMatchesQuery(item, normalizedQuery),
+          (item) =>
+            isListedOnMenu(item) && itemMatchesQuery(item, normalizedQuery),
         ),
       }))
       .filter((category) => category.items.length > 0);

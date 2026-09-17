@@ -1,4 +1,5 @@
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import { isListedOnMenu } from "@/components/menu/menu-types";
 
 export type PrintPageSection = {
   categoryId: string;
@@ -88,6 +89,56 @@ export function pagePreviewLabel(slice: PrintPageSlice): string {
     section.continuation ? `${section.categoryName} (suite)` : section.categoryName,
   );
   return names.join(" · ");
+}
+
+/** Si la mesure DOM a loupé un plat, on le recolle sur la dernière page. */
+export function appendMissingPrintItems(
+  slices: PrintPageSlice[],
+  categories: MenuCategoryDto[],
+): PrintPageSlice[] {
+  const included = new Set(
+    slices.flatMap((slice) =>
+      slice.sections.flatMap((section) => section.items.map((item) => item.id)),
+    ),
+  );
+
+  const missingByCategory = new Map<string, PrintPageSection>();
+  for (const category of categories) {
+    for (const item of category.items) {
+      if (!isListedOnMenu(item) || included.has(item.id)) continue;
+      const current = missingByCategory.get(category.id);
+      if (current) {
+        current.items.push(item);
+      } else {
+        missingByCategory.set(category.id, {
+          categoryId: category.id,
+          categoryName: category.name,
+          continuation: slices.some((slice) =>
+            slice.sections.some((section) => section.categoryId === category.id),
+          ),
+          items: [item],
+        });
+      }
+    }
+  }
+
+  if (missingByCategory.size === 0) return slices;
+
+  const extra = [...missingByCategory.values()];
+  const lastContent = [...slices].reverse().find((slice) => !slice.isCover);
+  if (lastContent) {
+    return slices.map((slice) =>
+      slice.page === lastContent.page
+        ? { ...slice, sections: [...slice.sections, ...extra] }
+        : slice,
+    );
+  }
+
+  const page = slices.length + 1;
+  return [
+    ...slices,
+    { page, isCover: false, sections: extra },
+  ];
 }
 
 export function slicePrintPagesFromDom(

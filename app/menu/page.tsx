@@ -15,7 +15,7 @@ export default function PublicMenuPage() {
   useEffect(() => {
     async function load() {
       try {
-        const response = await fetch("/api/menu");
+        const response = await fetch("/api/menu", { cache: "no-store" });
         if (!response.ok) {
           setLoadState("error");
           return;

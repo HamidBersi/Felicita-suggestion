@@ -1,4 +1,5 @@
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import { isListedOnMenu } from "@/components/menu/menu-types";
 import { DishTitle } from "@/components/menu/dish-title";
 import type { PrintPageSlice } from "@/components/menu/print-pagination";
 import {
@@ -96,7 +97,7 @@ function DishBlock({ item }: { item: MenuItemDto }) {
           aria-hidden
         />
         <span className="shrink-0 text-[15px] font-semibold text-black">
-          {item.price} €
+          {formatEuro(item.price)}
         </span>
       </div>
       {item.description?.trim() ? (
@@ -173,7 +174,7 @@ export function MenuSheet({
     .filter((category) => categoryMatchesFilter(category.id, categoryFilter))
     .map((category) => ({
       ...category,
-      items: category.items.filter((item) => item.isAvailable),
+      items: category.items.filter((item) => isListedOnMenu(item)),
     }))
     .filter((category) => category.items.length > 0);
 

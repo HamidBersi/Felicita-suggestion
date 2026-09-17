@@ -4,7 +4,7 @@ import { requireOwner } from "@/lib/require-owner";
 import {
   headlineFromTiers,
   parseOptionalPrice,
-  PRICE_PATTERN,
+  parseRequiredPrice,
 } from "@/lib/menu-price";
 import { normalizeDishEmoji } from "@/lib/dish-emoji";
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     verre.value || quart.value || demi.value || bouteille.value,
   );
 
-  let priceRaw = input.price?.trim().replace(",", ".") ?? "";
+  let priceRaw = "";
   if (hasWineTiers) {
     priceRaw =
       headlineFromTiers({
@@ -59,6 +59,12 @@ export async function POST(request: Request) {
         demi: demi.value,
         bouteille: bouteille.value,
       }) ?? "";
+  } else {
+    const parsedPrice = parseRequiredPrice(input.price);
+    if (!parsedPrice.ok) {
+      return NextResponse.json({ error: "Prix invalide." }, { status: 400 });
+    }
+    priceRaw = parsedPrice.value;
   }
 
   if (!categoryId || !name || !priceRaw) {
@@ -66,10 +72,6 @@ export async function POST(request: Request) {
       { error: "Catégorie, nom et au moins un prix sont obligatoires." },
       { status: 400 },
     );
-  }
-
-  if (!PRICE_PATTERN.test(priceRaw)) {
-    return NextResponse.json({ error: "Prix invalide." }, { status: 400 });
   }
 
   const category = await prisma.menuCategory.findUnique({

@@ -289,6 +289,16 @@
     color: #8f6a24 !important;
   }
 
+  .dish-mark {
+    display: inline-block !important;
+    width: 1em !important;
+    height: 1em !important;
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   .wine-table thead {
     display: table-header-group;
   }

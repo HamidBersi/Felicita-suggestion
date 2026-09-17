@@ -4,7 +4,7 @@ import { requireOwner } from "@/lib/require-owner";
 import {
   headlineFromTiers,
   parseOptionalPrice,
-  PRICE_PATTERN,
+  parseRequiredPrice,
 } from "@/lib/menu-price";
 import { normalizeDishEmoji } from "@/lib/dish-emoji";
 
@@ -67,11 +67,11 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (typeof input.price === "string") {
-    const price = input.price.trim().replace(",", ".");
-    if (!PRICE_PATTERN.test(price)) {
+    const parsedPrice = parseRequiredPrice(input.price);
+    if (!parsedPrice.ok) {
       return NextResponse.json({ error: "Prix invalide." }, { status: 400 });
     }
-    data.price = price;
+    data.price = parsedPrice.value;
   }
 
   const wineKeys = [

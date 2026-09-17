@@ -22,3 +22,8 @@ export type MenuCategoryDto = {
   menuType?: string;
   items: MenuItemDto[];
 };
+
+/** L’édition liste tout ; aperçu / print cachent seulement un `false` explicite. */
+export function isListedOnMenu(item: Pick<MenuItemDto, "isAvailable">): boolean {
+  return item.isAvailable !== false;
+}

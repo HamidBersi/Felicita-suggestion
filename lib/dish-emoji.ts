@@ -2,6 +2,7 @@ export const DISH_EMOJI_OPTIONS = [
   { id: "chili", label: "Piment" },
   { id: "bio", label: "Bio" },
   { id: "veg", label: "Végé" },
+  { id: "vegan", label: "Vegan" },
 ] as const;
 
 export type DishEmojiId = (typeof DISH_EMOJI_OPTIONS)[number]["id"];
