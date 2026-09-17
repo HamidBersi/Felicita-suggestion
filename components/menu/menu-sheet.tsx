@@ -1,5 +1,6 @@
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
 import { DishTitle } from "@/components/menu/dish-title";
+import type { PrintPageSlice } from "@/components/menu/print-pagination";
 import {
   formatEuro,
   hasWineTiers,
