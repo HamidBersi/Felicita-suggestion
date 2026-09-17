@@ -45,7 +45,9 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
         <tr className="text-[11px] tracking-wide text-[#8a8578] uppercase">
           <th className="pb-1.5 pr-2 text-left font-medium">Vin</th>
           {WINE_TIER_COLUMNS.map((column) => (
-            <th key={column.key} className="w-[4.5rem] pb-1.5 text-right font-medium">
+            <th key={column.key} className="w-[4.8rem] pb-1.5 pr-2 text-left font-medium">
+              {column.label}
+            </th>
               {column.label}
             </th>
           ))}
@@ -72,7 +74,7 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
               {WINE_TIER_COLUMNS.map((column) => (
                 <td
                   key={column.key}
-                  className="py-1.5 text-right font-semibold tabular-nums text-black"
+                  className="py-1.5 pr-2 text-left font-semibold tabular-nums text-black"
                 >
                   {item[column.key] ? formatEuro(item[column.key]) : "—"}
                 </td>
