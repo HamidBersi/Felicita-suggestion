@@ -163,9 +163,9 @@ export function DishTitle({
   const id = normalizeDishEmoji(emoji);
   if (!id) return name;
   return (
-    <span className="inline-flex items-center gap-[0.22em] align-middle">
-      <DishMark emoji={id} />
-      <span>{name}</span>
+    <span>
+      <DishMark emoji={id} />{" "}
+      {name}
     </span>
   );
 }

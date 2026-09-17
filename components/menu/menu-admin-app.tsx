@@ -539,7 +539,7 @@ export function MenuAdminApp() {
             ) : (
               <>
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="font-[family-name:var(--font-cormorant)] text-[28px] font-semibold">
+                  <h2 className="font-[family-name:var(--font-cormorant)] text-[28px] font-bold italic text-[#8F6A24]">
                     {selectedCategory?.name ?? "Aucune catégorie"}
                   </h2>
                   <button
@@ -623,7 +623,7 @@ export function MenuAdminApp() {
           >
             <DigitalMenu categories={categories} />
           </div>
-          <div className={printSlices ? "block" : "hidden print:block"}>
+          <div className={printSlices ? "block bg-white" : "hidden bg-white print:block"}>
             <MenuSheet
               categories={categories}
               printSlices={printSlices}

@@ -71,7 +71,7 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
               {WINE_TIER_COLUMNS.map((column) => (
                 <td
                   key={column.key}
-                  className="py-1.5 text-right tabular-nums text-[#1E3A2F]"
+                  className="py-1.5 text-right font-semibold tabular-nums text-black"
                 >
                   {item[column.key] ? formatEuro(item[column.key]) : "—"}
                 </td>
@@ -95,7 +95,7 @@ function DishBlock({ item }: { item: MenuItemDto }) {
           className="mb-0.5 min-w-[1rem] flex-1 border-b border-dotted border-[#b9b19b]"
           aria-hidden
         />
-        <span className="shrink-0 text-[15px] font-semibold text-[#1E3A2F]">
+        <span className="shrink-0 text-[15px] font-semibold text-black">
           {item.price} €
         </span>
       </div>
@@ -121,7 +121,7 @@ function CategoryBlock({
 
   return (
     <section className="menu-cat" data-category-id={category.id}>
-      <h2 className="menu-cat-title mb-3 flex items-center gap-3 font-[family-name:var(--font-cormorant)] text-[28px] font-semibold italic leading-none text-[#8F6A24]">
+      <h2 className="menu-cat-title mb-3 flex items-center gap-3 font-[family-name:var(--font-cormorant)] text-[28px] font-bold italic leading-none text-[#8F6A24]">
         <span>
           {category.name}
           {continuation ? " (suite)" : ""}

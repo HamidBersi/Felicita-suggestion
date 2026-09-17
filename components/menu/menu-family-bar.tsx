@@ -134,31 +134,17 @@ export function MenuFamilyBar({
   ) : null;
 
   return (
-    <div>
-      <div className="lg:hidden">
-        <HScrollRow
-          wrapAt="never"
-          className="items-center gap-1.5 pr-10"
-          fadeFromClass={fadeFromClass}
-        >
-          {familyChips}
-          {subTabs ? (
-            <>
-              <span className="mx-1 h-4 w-px shrink-0 bg-[#e4dfd4]" aria-hidden />
-              {subTabs}
-            </>
-          ) : null}
-        </HScrollRow>
-      </div>
-
-      <div className="hidden lg:block">
-        <div className="flex flex-wrap gap-1.5">{familyChips}</div>
-        {showSubRow ? (
-          <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
-            <div className="flex flex-wrap gap-x-1 gap-y-0">{subTabs}</div>
-          </div>
-        ) : null}
-      </div>
+    <div className="min-w-0">
+      <HScrollRow wrapAt="lg" className="gap-1.5 pr-10" fadeFromClass={fadeFromClass}>
+        {familyChips}
+      </HScrollRow>
+      {showSubRow ? (
+        <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
+          <HScrollRow wrapAt="lg" className="gap-x-1 pr-10" fadeFromClass={fadeFromClass}>
+            {subTabs}
+          </HScrollRow>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -181,13 +167,13 @@ function FamilyChip({
       type="button"
       title={title}
       onClick={onClick}
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
         active
           ? "border-[#1E3A2F] bg-[#1E3A2F] text-[#FBF8F1]"
           : "border-[#e4dfd4] bg-[#fbf8f1] text-[#3d3a32] hover:border-[#1E3A2F]/25"
       }`}
     >
-      <Icon className="size-3.5" />
+      <Icon className="size-4" />
       {label}
     </button>
   );
@@ -206,7 +192,7 @@ function SubTab({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 border-b-2 px-2.5 py-1 text-[13px] transition ${
+      className={`shrink-0 border-b-2 px-3 py-1.5 text-[15px] transition ${
         selected
           ? "border-[#1E3A2F] font-semibold text-[#1E3A2F]"
           : "border-transparent text-[#6b675c] hover:text-[#1B1E19]"

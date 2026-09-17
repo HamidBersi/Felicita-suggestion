@@ -108,7 +108,7 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-16 pt-5 sm:px-6">
+    <div className="mx-auto min-h-full w-full max-w-2xl overflow-x-hidden px-4 pb-16 pt-5 sm:px-6">
       <label className="relative block">
         <span className="sr-only">Chercher un plat, une boisson</span>
         <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#8a8578]" />
@@ -134,16 +134,18 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
       <div className="mt-6 space-y-10">
         {visibleSections.length === 0 ? (
           <p className="text-center text-sm text-[#6b675c]">
-            Aucun plat ne correspond à cette recherche.
+            {normalizedQuery
+              ? "Aucun plat ne correspond à cette recherche."
+              : "Aucun plat dans cette catégorie pour l’instant."}
           </p>
         ) : (
           visibleSections.map(({ category, family }) => (
             <section key={category.id}>
-              <div className="mb-4 flex items-baseline justify-between gap-3">
-                <h2 className="font-[family-name:var(--font-cormorant)] text-[28px] leading-none font-semibold text-[#1B1E19]">
+              <div className="mb-4 flex min-w-0 items-baseline justify-between gap-3">
+                <h2 className="min-w-0 flex-1 font-[family-name:var(--font-cormorant)] text-[28px] leading-none font-bold italic text-[#8F6A24]">
                   {category.name}
                 </h2>
-                <span className="text-[13px] text-[#8a8578]">
+                <span className="shrink-0 text-[13px] text-[#8a8578]">
                   {category.items.length} {family.countNoun}
                 </span>
               </div>
@@ -174,9 +176,9 @@ function WineRow({ item }: { item: MenuItemDto }) {
   });
 
   return (
-    <article>
-      <div className="flex items-baseline gap-2">
-        <h3 className="shrink-0 text-[15.5px] font-semibold text-[#1B1E19]">
+    <article className="min-w-0">
+      <div className="flex min-w-0 items-baseline gap-2">
+        <h3 className="min-w-0 text-[15.5px] font-semibold break-words text-[#1B1E19]">
           <DishTitle name={item.name} emoji={item.emoji} />
         </h3>
         <span
@@ -213,9 +215,9 @@ function DishRow({ item }: { item: MenuItemDto }) {
   const { title, volume } = splitNameAndVolume(item.name);
 
   return (
-    <article>
-      <div className="flex items-baseline gap-2">
-        <h3 className="shrink-0 text-[15.5px] font-semibold text-[#1B1E19]">
+    <article className="min-w-0">
+      <div className="flex min-w-0 items-baseline gap-2">
+        <h3 className="min-w-0 text-[15.5px] font-semibold break-words text-[#1B1E19]">
           <DishTitle name={title} emoji={item.emoji} />
           {volume ? (
             <span className="ml-1.5 font-normal text-[#8a8578]">{volume}</span>

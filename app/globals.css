@@ -49,7 +49,7 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: #f4f1ea;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -124,6 +124,8 @@
   html,
   body {
     @apply font-sans;
+    min-height: 100%;
+    background: #f4f1ea;
   }
   input,
   textarea,
@@ -132,7 +134,7 @@
     font: inherit;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }
 
@@ -208,7 +210,7 @@
   body {
     height: auto !important;
     min-height: 0 !important;
-    background: white !important;
+    background: #ffffff !important;
   }
 
   .menu-admin-chrome {
@@ -216,18 +218,25 @@
   }
 
   .menu-admin-root {
-    background: white !important;
+    background: #ffffff !important;
     min-height: 0 !important;
     height: auto !important;
     display: block !important;
+  }
+
+  .menu-sheet,
+  .menu-print-page,
+  .menu-cover,
+  .menu-print-pages {
+    background: #ffffff !important;
+    box-shadow: none !important;
   }
 
   .menu-sheet {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    background: #ffffff !important;
   }
 
   .menu-print-page,
@@ -275,7 +284,8 @@
 
   .menu-cat-title {
     font-size: 28px !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    font-style: italic !important;
     color: #8f6a24 !important;
   }
 
