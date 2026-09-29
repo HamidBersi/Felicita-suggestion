@@ -10,7 +10,14 @@ type UiStrings = {
   wineDemi: string;
   wineBottle: string;
   loadError: string;
-  families: Record<Exclude<MenuFamilyId, "all">, { label: string; navLabel?: string; countNoun: string }>;
+  suggestionsCta: string;
+  suggestionsHint: string;
+  suggestionsCardTitle: string;
+  suggestionsCardSubtitle: string;
+  families: Record<
+    Exclude<MenuFamilyId, "all">,
+    { label: string; navLabel?: string; countNoun: string }
+  >;
 };
 
 export const UI: Record<MenuLocale, UiStrings> = {
@@ -23,6 +30,10 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineDemi: "Demi",
     wineBottle: "Bouteille",
     loadError: "Impossible de charger le menu.",
+    suggestionsCta: "Découvrez nos suggestions du jour",
+    suggestionsHint: "Aussi : suggestions du jour →",
+    suggestionsCardTitle: "Suggestions du jour",
+    suggestionsCardSubtitle: "Poissons & plats du moment",
     families: {
       aperitivo: { label: "Boissons", countNoun: "boissons" },
       antipasti: { label: "Entrées", countNoun: "plats" },
@@ -41,6 +52,10 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineDemi: "Half",
     wineBottle: "Bottle",
     loadError: "Unable to load the menu.",
+    suggestionsCta: "Discover today’s specials",
+    suggestionsHint: "Also: today’s specials →",
+    suggestionsCardTitle: "Today’s specials",
+    suggestionsCardSubtitle: "Fish & dishes of the moment",
     families: {
       aperitivo: { label: "Drinks", countNoun: "drinks" },
       antipasti: { label: "Starters", countNoun: "dishes" },
@@ -59,6 +74,10 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineDemi: "Halbe",
     wineBottle: "Flasche",
     loadError: "Menü konnte nicht geladen werden.",
+    suggestionsCta: "Entdecken Sie die Tagesempfehlungen",
+    suggestionsHint: "Auch: Tagesempfehlungen →",
+    suggestionsCardTitle: "Tagesempfehlungen",
+    suggestionsCardSubtitle: "Fisch & Gerichte des Moments",
     families: {
       aperitivo: { label: "Getränke", countNoun: "Getränke" },
       antipasti: { label: "Vorspeisen", countNoun: "Gerichte" },
@@ -77,6 +96,10 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineDemi: "Mezzo",
     wineBottle: "Bottiglia",
     loadError: "Impossibile caricare il menu.",
+    suggestionsCta: "Scoprite i suggerimenti del giorno",
+    suggestionsHint: "Anche: suggerimenti del giorno →",
+    suggestionsCardTitle: "Suggerimenti del giorno",
+    suggestionsCardSubtitle: "Pesce e piatti del momento",
     families: {
       aperitivo: { label: "Bevande", countNoun: "bevande" },
       antipasti: { label: "Antipasti", countNoun: "piatti" },

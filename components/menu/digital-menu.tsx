@@ -27,6 +27,13 @@ import {
   readStoredMenuLocale,
   storeMenuLocale,
 } from "@/components/menu/menu-top-nav";
+import {
+  SuggestionsFishCard,
+  SuggestionsStickyCta,
+  fishDescriptionWithoutBoardHint,
+  isFishCategory,
+  isFishOfTheDay,
+} from "@/components/menu/suggestions-cta";
 
 type DigitalMenuProps = {
   categories: MenuCategoryDto[];
@@ -123,7 +130,7 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
   }
 
   return (
-    <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-16">
+    <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-24">
       <div className="sticky top-0 z-30 min-w-0 bg-[#F4F1EA]/95 backdrop-blur-sm">
         <MenuTopNav locale={locale} onLocaleChange={handleLocaleChange} />
         <div className="min-w-0 px-4 py-3 sm:px-6">
@@ -158,10 +165,21 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
                   <DishRow key={item.id} item={item} locale={locale} />
                 ))}
               </div>
+
+              {isFishCategory(category.name) ? (
+                <div className="mt-14 sm:mt-16">
+                  <SuggestionsFishCard locale={locale} />
+                </div>
+              ) : null}
             </section>
           ))
         )}
       </div>
+
+      <SuggestionsStickyCta
+        locale={locale}
+        hidden={subCategoryName === "Nos poissons"}
+      />
     </div>
   );
 }
@@ -219,6 +237,9 @@ function DishRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
 
   const translated = translateItem(locale, item.name, item.description);
   const { title, volume } = splitNameAndVolume(translated.name);
+  const description = isFishOfTheDay(item.name)
+    ? fishDescriptionWithoutBoardHint(translated.description)
+    : translated.description;
 
   return (
     <article className="min-w-0">
@@ -237,9 +258,9 @@ function DishRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
           {formatMenuPrice(item.price)}
         </span>
       </div>
-      {translated.description ? (
+      {description ? (
         <p className="mt-0.5 max-w-[92%] text-[13px] leading-snug text-[#7a766c]">
-          {translated.description}
+          {description}
         </p>
       ) : null}
     </article>
