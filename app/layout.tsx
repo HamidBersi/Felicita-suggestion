@@ -46,7 +46,7 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakarta.variable} ${cormorant.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className={`${plusJakarta.className} min-h-full flex flex-col font-sans`}>
+      <body className={`${plusJakarta.className} flex min-h-full min-w-0 flex-col font-sans`}>
         {children}
       </body>
     </html>

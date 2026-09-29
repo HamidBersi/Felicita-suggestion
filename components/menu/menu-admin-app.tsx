@@ -1,6 +1,24 @@
 "use client";
 
-import { LogOut, Menu, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, LogOut, Menu, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -90,6 +108,19 @@ export function MenuAdminApp() {
   const [menuPublicUrl, setMenuPublicUrl] = useState("/menu");
   const [pendingDelete, setPendingDelete] = useState<MenuItemDto | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [reordering, setReordering] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const loadMenu = useCallback(async () => {
     try {
@@ -156,6 +187,52 @@ export function MenuAdminApp() {
     if (!name) return;
     const found = categories.find((category) => category.name === name);
     if (found) setSelectedCategoryId(found.id);
+  }
+
+  async function handleItemsDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !selectedCategory || reordering) return;
+
+    const items = selectedCategory.items;
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const previous = categories;
+    const reordered = arrayMove(items, oldIndex, newIndex).map((item, index) => ({
+      ...item,
+      position: index,
+    }));
+
+    setCategories((current) =>
+      current.map((category) =>
+        category.id === selectedCategory.id
+          ? { ...category, items: reordered }
+          : category,
+      ),
+    );
+
+    setReordering(true);
+    try {
+      const response = await fetch("/api/menu/items/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryId: selectedCategory.id,
+          orderedIds: reordered.map((item) => item.id),
+        }),
+      });
+      if (!response.ok) {
+        setCategories(previous);
+        toast.error("Impossible d’enregistrer l’ordre.");
+        return;
+      }
+    } catch {
+      setCategories(previous);
+      toast.error("Impossible d’enregistrer l’ordre.");
+    } finally {
+      setReordering(false);
+    }
   }
 
   function openCreate() {
@@ -542,26 +619,28 @@ export function MenuAdminApp() {
       </header>
 
       {view === "edit" ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="menu-admin-chrome shrink-0 border-b border-[#D9CFB8] bg-[#FBF8F1]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
-            <MenuFamilyBar
-              familyId={familyId}
-              onFamilyChange={selectFamily}
-              subCategoryName={selectedCategory?.name ?? null}
-              onSubCategoryChange={selectSubCategory}
-              categoryNames={categoriesForFamily("all", categories).map(
-                (category) => category.name,
-              )}
-              showSubAllTab={false}
-              fadeFromClass="from-[#FBF8F1]"
-            />
+        <div className="flex min-h-0 flex-1 flex-col bg-[#F4F1EA]">
+          <div className="menu-admin-chrome sticky top-0 z-20 shrink-0 border-b border-[#e4dfd4] bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+            <div className="mx-auto min-w-0 max-w-2xl">
+              <MenuFamilyBar
+                familyId={familyId}
+                onFamilyChange={selectFamily}
+                subCategoryName={selectedCategory?.name ?? null}
+                onSubCategoryChange={selectSubCategory}
+                categoryNames={categoriesForFamily("all", categories).map(
+                  (category) => category.name,
+                )}
+                showSubAllTab={false}
+                fadeFromClass="from-[#F4F1EA]"
+              />
+            </div>
           </div>
 
-          <section className="overflow-y-auto p-6 sm:p-8">
+          <section className="overflow-y-auto px-4 py-6 sm:px-6 sm:py-8">
             {loading ? (
               <p className="text-sm text-[#6b6a5f]">Chargement…</p>
             ) : (
-              <>
+              <div className="mx-auto w-full min-w-0 max-w-2xl">
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                   <h2 className="font-[family-name:var(--font-cormorant)] text-[28px] font-bold italic text-[#8F6A24]">
                     {selectedCategory?.name ?? "Aucune catégorie"}
@@ -581,62 +660,30 @@ export function MenuAdminApp() {
                     Aucun plat dans cette catégorie pour l&apos;instant.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-                    {selectedCategory.items.map((item) => (
-                      <article
-                        key={item.id}
-                        className="flex min-w-0 flex-col gap-1.5 rounded-[10px] border border-[#D9CFB8] bg-white px-4 py-3.5"
-                      >
-                        <div className="flex min-w-0 items-start justify-between gap-2">
-                          <h3 className="min-w-0 flex-1 break-words font-[family-name:var(--font-cormorant)] text-[19px] font-semibold leading-snug">
-                            <DishTitle name={item.name} emoji={item.emoji} />
-                          </h3>
-                          <span className="shrink-0 font-semibold text-[#1E3A2F]">
-                            {item.price} €
-                          </span>
-                        </div>
-                        {item.priceVerre ||
-                        item.priceQuart ||
-                        item.priceDemi ||
-                        item.priceBouteille ? (
-                          <p className="text-[12px] text-[#6b6a5f]">
-                            {[
-                              item.priceQuart ? `Quart ${item.priceQuart} €` : null,
-                              item.priceDemi ? `Demi ${item.priceDemi} €` : null,
-                              item.priceBouteille
-                                ? `Btl ${item.priceBouteille} €`
-                                : null,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </p>
-                        ) : null}
-                        {item.description?.trim() ? (
-                          <p className="w-full break-words text-sm leading-snug text-[#6b6a5f]">
-                            {item.description}
-                          </p>
-                        ) : null}
-                        <div className="mt-1.5 flex justify-end gap-1">
-                          <button
-                            type="button"
-                            className="rounded px-2 py-1 text-[12.5px] font-semibold text-[#6b6a5f] hover:bg-black/5 hover:text-[#1B1E19]"
-                            onClick={() => openEdit(item)}
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded px-2 py-1 text-[12.5px] font-semibold text-[#6E2A2A] hover:bg-[#6E2A2A]/10"
-                            onClick={() => setPendingDelete(item)}
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleItemsDragEnd}
+                  >
+                    <SortableContext
+                      items={selectedCategory.items.map((item) => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-3">
+                        {selectedCategory.items.map((item) => (
+                          <SortableMenuItem
+                            key={item.id}
+                            item={item}
+                            disabled={reordering}
+                            onEdit={() => openEdit(item)}
+                            onDelete={() => setPendingDelete(item)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
-              </>
+              </div>
             )}
           </section>
         </div>
@@ -1018,3 +1065,95 @@ export function MenuAdminApp() {
     </div>
   );
 }
+
+function SortableMenuItem({
+  item,
+  disabled,
+  onEdit,
+  onDelete,
+}: {
+  item: MenuItemDto;
+  disabled?: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <article
+      ref={setNodeRef}
+      style={style}
+      className="flex min-w-0 flex-col gap-1.5 rounded-[10px] border border-[#D9CFB8] bg-white px-4 py-3.5"
+    >
+      <div className="flex min-w-0 items-start gap-2.5">
+        <button
+          type="button"
+          className="mt-0.5 shrink-0 cursor-grab touch-none rounded-md border border-[#D9CFB8] bg-white p-1.5 text-[#8a8578] hover:border-[#1E3A2F]/30 hover:text-[#1E3A2F] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Déplacer le plat"
+          disabled={disabled}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+          <h3 className="min-w-0 flex-1 break-words font-[family-name:var(--font-cormorant)] text-[19px] font-semibold leading-snug">
+            <DishTitle name={item.name} emoji={item.emoji} />
+          </h3>
+          <span className="shrink-0 font-semibold text-[#1E3A2F]">
+            {item.price} €
+          </span>
+        </div>
+      </div>
+      {item.priceVerre ||
+      item.priceQuart ||
+      item.priceDemi ||
+      item.priceBouteille ? (
+        <p className="pl-[42px] text-[12px] text-[#6b6a5f]">
+          {[
+            item.priceQuart ? `Quart ${item.priceQuart} €` : null,
+            item.priceDemi ? `Demi ${item.priceDemi} €` : null,
+            item.priceBouteille ? `Btl ${item.priceBouteille} €` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      ) : null}
+      {item.description?.trim() ? (
+        <p className="w-full break-words pl-[42px] text-sm leading-snug text-[#6b6a5f]">
+          {item.description}
+        </p>
+      ) : null}
+      <div className="mt-2 flex justify-end gap-2 border-t border-[#EFE8DC] pt-2.5">
+        <button
+          type="button"
+          className="rounded-md border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-1.5 text-[13px] font-semibold text-[#1E3A2F] transition hover:border-[#1E3A2F]/35 hover:bg-white"
+          onClick={onEdit}
+        >
+          Modifier
+        </button>
+        <button
+          type="button"
+          className="rounded-md border border-[#E0B4B0] bg-[#F8EEEE] px-3 py-1.5 text-[13px] font-semibold text-[#6E2A2A] transition hover:bg-[#F3E0DE]"
+          onClick={onDelete}
+        >
+          Supprimer
+        </button>
+      </div>
+    </article>
+  );
+}
+

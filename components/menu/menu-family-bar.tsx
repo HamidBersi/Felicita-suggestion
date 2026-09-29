@@ -11,8 +11,13 @@ import {
 } from "lucide-react";
 
 import {
+  tFamily,
+  tUi,
+  translateCategoryChip,
+  type MenuLocale,
+} from "@/components/menu/i18n";
+import {
   MENU_FAMILIES,
-  chipLabel,
   familyForCategoryName,
   type MenuFamily,
   type MenuFamilyId,
@@ -39,6 +44,9 @@ type MenuFamilyBarProps = {
   /** En édition : pas de sous-onglet « Tout », une catégorie toujours choisie */
   showSubAllTab?: boolean;
   fadeFromClass?: string;
+  locale?: MenuLocale;
+  /** Admin : icônes. Public (défaut) : comme la vitrine, texte seul. */
+  showIcons?: boolean;
 };
 
 export function categoriesForFamily(
@@ -75,7 +83,10 @@ export function MenuFamilyBar({
   categoryNames,
   showSubAllTab = true,
   fadeFromClass = "from-[#F4F1EA]",
+  locale = "fr",
+  showIcons = false,
 }: MenuFamilyBarProps) {
+  const ui = tUi(locale);
   const activeFamily =
     familyId === "all"
       ? null
@@ -93,19 +104,19 @@ export function MenuFamilyBar({
     <>
       <FamilyChip
         active={familyId === "all"}
-        icon={LayoutGrid}
-        label="Tout"
+        icon={showIcons ? LayoutGrid : undefined}
+        label={ui.filterAll}
         onClick={() => onFamilyChange("all")}
       />
       {MENU_FAMILIES.map((family) => {
-        const Icon = FAMILY_ICONS[family.id];
+        const labels = tFamily(locale, family.id);
         return (
           <FamilyChip
             key={family.id}
             active={familyId === family.id}
-            icon={Icon}
-            label={family.navLabel ?? family.label}
-            title={family.label}
+            icon={showIcons ? FAMILY_ICONS[family.id] : undefined}
+            label={labels.navLabel ?? labels.label}
+            title={labels.label}
             onClick={() => onFamilyChange(family.id)}
           />
         );
@@ -117,7 +128,7 @@ export function MenuFamilyBar({
     <>
       {showSubAllTab ? (
         <SubTab
-          label="Tout"
+          label={ui.filterAll}
           selected={subCategoryName === null}
           onClick={() => onSubCategoryChange(null)}
         />
@@ -125,7 +136,7 @@ export function MenuFamilyBar({
       {subNames.map((name) => (
         <SubTab
           key={name}
-          label={activeFamily ? chipLabel(activeFamily, name) : name}
+          label={translateCategoryChip(name, locale)}
           selected={subCategoryName === name}
           onClick={() => onSubCategoryChange(name)}
         />
@@ -135,12 +146,12 @@ export function MenuFamilyBar({
 
   return (
     <div className="min-w-0">
-      <HScrollRow wrapAt="lg" className="gap-1.5 pr-10" fadeFromClass={fadeFromClass}>
+      <HScrollRow wrapAt="never" className="gap-2 pr-10" fadeFromClass={fadeFromClass}>
         {familyChips}
       </HScrollRow>
       {showSubRow ? (
-        <div className="mt-3 border-t border-[#e4dfd4] pt-2.5">
-          <HScrollRow wrapAt="lg" className="gap-x-1 pr-10" fadeFromClass={fadeFromClass}>
+        <div className="mt-2 border-t border-[#e4dfd4] pt-1.5">
+          <HScrollRow wrapAt="never" className="gap-x-1.5 pr-10" fadeFromClass={fadeFromClass}>
             {subTabs}
           </HScrollRow>
         </div>
@@ -157,7 +168,7 @@ function FamilyChip({
   onClick,
 }: {
   active: boolean;
-  icon: typeof Wine;
+  icon?: typeof Wine;
   label: string;
   title?: string;
   onClick: () => void;
@@ -173,7 +184,7 @@ function FamilyChip({
           : "border-[#e4dfd4] bg-[#fbf8f1] text-[#3d3a32] hover:border-[#1E3A2F]/25"
       }`}
     >
-      <Icon className="size-4" />
+      {Icon ? <Icon className="size-4" /> : null}
       {label}
     </button>
   );
