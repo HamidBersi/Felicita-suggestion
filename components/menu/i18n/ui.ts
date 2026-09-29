@@ -3,6 +3,7 @@ import type { MenuFamilyId } from "@/components/menu/menu-groups";
 
 type UiStrings = {
   tagline: string;
+  backLabel: string;
   filterAll: string;
   emptyCategory: string;
   selectLanguage: string;
@@ -23,6 +24,7 @@ type UiStrings = {
 export const UI: Record<MenuLocale, UiStrings> = {
   fr: {
     tagline: "Restaurant Italien",
+    backLabel: "Retour",
     filterAll: "Tout",
     emptyCategory: "Aucun plat dans cette catégorie pour l’instant.",
     selectLanguage: "Choisir la langue",
@@ -45,6 +47,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
   },
   en: {
     tagline: "Italian Restaurant",
+    backLabel: "Back",
     filterAll: "All",
     emptyCategory: "No dishes in this category yet.",
     selectLanguage: "Choose language",
@@ -67,6 +70,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
   },
   de: {
     tagline: "Italienisches Restaurant",
+    backLabel: "Zurück",
     filterAll: "Alle",
     emptyCategory: "In dieser Kategorie gibt es noch keine Gerichte.",
     selectLanguage: "Sprache wählen",
@@ -89,6 +93,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
   },
   it: {
     tagline: "Ristorante Italiano",
+    backLabel: "Indietro",
     filterAll: "Tutto",
     emptyCategory: "Nessun piatto in questa categoria per il momento.",
     selectLanguage: "Scegli la lingua",

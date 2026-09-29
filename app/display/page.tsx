@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Wheat } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { DiscreetBackButton, isPwaStandalone } from "@/components/discreet-back-button";
+
 const MAX_DISPLAYED = 8;
 
 type LabelColor = "orange" | "red" | "green";
@@ -155,18 +157,10 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
 export default function DisplayPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [showVitrineBack, setShowVitrineBack] = useState(false);
+  const [showPwaBack, setShowPwaBack] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const fromVitrine = params.get("from") === "vitrine";
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      ("standalone" in navigator &&
-        (navigator as Navigator & { standalone?: boolean }).standalone === true);
-
-    // Bouton Retour : lien vitrine uniquement (pas en mode PWA tablette)
-    setShowVitrineBack(fromVitrine && !isStandalone);
+    setShowPwaBack(isPwaStandalone());
   }, []);
 
   useEffect(() => {
@@ -190,15 +184,6 @@ export default function DisplayPage() {
     void loadSuggestionsFromApi();
   }, []);
 
-  function handleVitrineBack() {
-    const vitrineUrl = process.env.NEXT_PUBLIC_VITRINE_URL?.trim();
-    if (vitrineUrl) {
-      window.location.href = vitrineUrl;
-      return;
-    }
-    window.history.back();
-  }
-
   const hasOverflow = loadState === "ready" && suggestions.length > MAX_DISPLAYED;
   const displayed = loadState === "ready" ? suggestions.slice(0, MAX_DISPLAYED) : [];
   const density = getDensity(displayed.length);
@@ -216,30 +201,10 @@ export default function DisplayPage() {
       {/* Overlay sombre pour la lisibilité */}
       <div className="absolute inset-0 bg-black/60" />
 
-      {showVitrineBack ? (
-        <button
-          type="button"
-          onClick={handleVitrineBack}
-          className="absolute left-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-md transition-all active:scale-95 hover:bg-white/25 sm:left-4 sm:top-4 sm:h-12 sm:w-12"
-          aria-label="Retour au site"
-        >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-            className="mr-0.5"
-          >
-            <path
-              d="M15 6l-6 6 6 6"
-              stroke="currentColor"
-              strokeWidth="2.25"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+      {showPwaBack ? (
+        <div className="absolute left-2 top-2 z-20 sm:left-3 sm:top-3">
+          <DiscreetBackButton tone="dark" label="Retour" />
+        </div>
       ) : null}
 
       <div className="relative z-10 mx-auto flex h-full w-[88%] max-w-2xl flex-col py-1">

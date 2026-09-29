@@ -9,6 +9,7 @@ import {
   tUi,
   type MenuLocale,
 } from "@/components/menu/i18n";
+import { DiscreetBackButton, isPwaStandalone } from "@/components/discreet-back-button";
 
 function Flag({ locale }: { locale: MenuLocale }) {
   if (locale === "fr") {
@@ -56,8 +57,13 @@ type MenuTopNavProps = {
 
 export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
   const [open, setOpen] = useState(false);
+  const [showPwaBack, setShowPwaBack] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const ui = tUi(locale);
+
+  useEffect(() => {
+    setShowPwaBack(isPwaStandalone());
+  }, []);
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
@@ -77,83 +83,90 @@ export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
   }, []);
 
   return (
-    <header className="relative z-[110] flex items-center justify-between gap-3 border-b border-[#e4dfd4] bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
-      <div className="flex min-w-0 items-center gap-3">
-        <Image
-          src="/felicita-logo.jpg"
-          alt="La Félicità"
-          width={52}
-          height={52}
-          className="size-[52px] shrink-0 rounded-full object-cover ring-1 ring-[#1B1E19]/20"
-          priority
-        />
-        <div className="min-w-0">
-          <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] leading-none font-semibold tracking-wide text-[#1E3A2F]">
-            La Félicità
-          </p>
-          <p className="mt-1 truncate text-[10px] font-medium tracking-[0.18em] text-[#8a8578] uppercase">
-            {ui.tagline}
-          </p>
+    <header className="relative z-[110] border-b border-[#e4dfd4] bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
+      {showPwaBack ? (
+        <div className="-ml-1 mb-1">
+          <DiscreetBackButton label={ui.backLabel} tone="light" />
         </div>
-      </div>
+      ) : null}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Image
+            src="/felicita-logo.jpg"
+            alt="La Félicità"
+            width={52}
+            height={52}
+            className="size-[52px] shrink-0 rounded-full object-cover ring-1 ring-[#1B1E19]/20"
+            priority
+          />
+          <div className="min-w-0">
+            <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] leading-none font-semibold tracking-wide text-[#1E3A2F]">
+              La Félicità
+            </p>
+            <p className="mt-1 truncate text-[10px] font-medium tracking-[0.18em] text-[#8a8578] uppercase">
+              {ui.tagline}
+            </p>
+          </div>
+        </div>
 
-      <div ref={ref} className="relative shrink-0">
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          aria-label={ui.selectLanguage}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          className="flex h-10 items-center gap-1.5 rounded-full border border-[#e4dfd4] bg-white px-2.5 shadow-sm transition hover:border-[#D8B871]"
-        >
-          <Flag locale={locale} />
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            aria-hidden
-            className={`text-[#8a8578] transition ${open ? "rotate-180" : ""}`}
+        <div ref={ref} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-label={ui.selectLanguage}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            className="flex h-10 items-center gap-1.5 rounded-full border border-[#e4dfd4] bg-white px-2.5 shadow-sm transition hover:border-[#D8B871]"
           >
-            <path
-              d="M2.5 4.5L6 8L9.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+            <Flag locale={locale} />
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              aria-hidden
+              className={`text-[#8a8578] transition ${open ? "rotate-180" : ""}`}
+            >
+              <path
+                d="M2.5 4.5L6 8L9.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
 
-        {open ? (
-          <ul
-            role="listbox"
-            className="absolute right-0 z-[120] mt-2 min-w-[168px] overflow-hidden rounded-xl border border-[#e4dfd4] bg-white py-1 shadow-lg"
-          >
-            {MENU_LOCALES.map((code) => {
-              const active = code === locale;
-              return (
-                <li key={code} role="option" aria-selected={active}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onLocaleChange(code);
-                      setOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition ${
-                      active
-                        ? "bg-[#F4F1EA] font-medium text-[#1E3A2F]"
-                        : "text-[#1B1E19] hover:bg-[#FBF8F1]"
-                    }`}
-                  >
-                    <Flag locale={code} />
-                    {LOCALE_LABELS[code]}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
+          {open ? (
+            <ul
+              role="listbox"
+              className="absolute right-0 z-[120] mt-2 min-w-[168px] overflow-hidden rounded-xl border border-[#e4dfd4] bg-white py-1 shadow-lg"
+            >
+              {MENU_LOCALES.map((code) => {
+                const active = code === locale;
+                return (
+                  <li key={code} role="option" aria-selected={active}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onLocaleChange(code);
+                        setOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition ${
+                        active
+                          ? "bg-[#F4F1EA] font-medium text-[#1E3A2F]"
+                          : "text-[#1B1E19] hover:bg-[#FBF8F1]"
+                      }`}
+                    >
+                      <Flag locale={code} />
+                      {LOCALE_LABELS[code]}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
       </div>
     </header>
   );
