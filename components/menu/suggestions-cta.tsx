@@ -127,7 +127,7 @@ export function SuggestionsStickyCta({
 
   return (
     <div
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(0.65rem,env(safe-area-inset-bottom))] transition duration-300 ${
+      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1.35rem,calc(env(safe-area-inset-bottom)+0.75rem))] transition duration-300 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-[120%] opacity-0"
       }`}
     >
