@@ -9,7 +9,6 @@ import {
   tUi,
   type MenuLocale,
 } from "@/components/menu/i18n";
-import { DiscreetBackButton, isPwaStandalone } from "@/components/discreet-back-button";
 
 function Flag({ locale }: { locale: MenuLocale }) {
   if (locale === "fr") {
@@ -50,6 +49,14 @@ function Flag({ locale }: { locale: MenuLocale }) {
   );
 }
 
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  window.location.href = "/";
+}
+
 type MenuTopNavProps = {
   locale: MenuLocale;
   onLocaleChange: (locale: MenuLocale) => void;
@@ -57,13 +64,8 @@ type MenuTopNavProps = {
 
 export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
   const [open, setOpen] = useState(false);
-  const [showPwaBack, setShowPwaBack] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const ui = tUi(locale);
-
-  useEffect(() => {
-    setShowPwaBack(isPwaStandalone());
-  }, []);
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
@@ -84,22 +86,22 @@ export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
 
   return (
     <header className="relative z-[110] flex items-center justify-between gap-3 border-b border-[#e4dfd4] bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
-      {showPwaBack ? (
-        <DiscreetBackButton
-          label={ui.backLabel}
-          tone="light"
-          className="absolute top-1/2 left-1 z-20 -translate-y-1/2 sm:left-2"
-        />
-      ) : null}
       <div className="flex min-w-0 items-center gap-3">
-        <Image
-          src="/felicita-logo.jpg"
-          alt="La Félicità"
-          width={52}
-          height={52}
-          className="size-[52px] shrink-0 rounded-full object-cover ring-1 ring-[#1B1E19]/20"
-          priority
-        />
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label={ui.backLabel}
+          className="shrink-0 rounded-full transition active:scale-95 hover:opacity-90"
+        >
+          <Image
+            src="/felicita-logo.jpg"
+            alt="La Félicità"
+            width={52}
+            height={52}
+            className="size-[52px] rounded-full object-cover ring-1 ring-[#1B1E19]/20"
+            priority
+          />
+        </button>
         <div className="min-w-0">
           <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] leading-none font-semibold tracking-wide text-[#1E3A2F]">
             La Félicità
