@@ -93,10 +93,10 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
           <h2
             className={`min-w-0 font-semibold text-[#163D2E] ${
               isTight
-                ? "text-[clamp(0.95rem,2vh,1.15rem)]"
+                ? "text-[clamp(0.8rem,1.65vh,0.95rem)]"
                 : isCompact
-                  ? "text-[clamp(1.05rem,2.2vh,1.25rem)]"
-                  : "text-[clamp(1.15rem,2.5vh,1.4rem)]"
+                  ? "text-[clamp(0.85rem,1.8vh,1.02rem)]"
+                  : "text-[clamp(0.92rem,1.95vh,1.12rem)]"
             }`}
           >
             {suggestion.title}
@@ -123,12 +123,12 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
               aria-hidden
             />
             <span
-              className={`shrink-0 font-bold tabular-nums text-[#C4921A] ${
+              className={`shrink-0 font-semibold tabular-nums text-[#1E5C45] ${
                 isTight
-                  ? "text-[clamp(0.85rem,1.8vh,1rem)]"
+                  ? "text-[clamp(0.68rem,1.35vh,0.78rem)]"
                   : isCompact
-                    ? "text-[clamp(0.9rem,1.9vh,1.05rem)]"
-                    : "text-[clamp(0.95rem,2vh,1.15rem)]"
+                    ? "text-[clamp(0.72rem,1.45vh,0.85rem)]"
+                    : "text-[clamp(0.78rem,1.55vh,0.9rem)]"
               }`}
             >
               {price}
@@ -237,7 +237,7 @@ export default function DisplayPage() {
           </h1>
         </header>
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {loadState === "loading" && (
             <div className="flex flex-1 flex-col items-center justify-center">
               <div className="relative size-9">
@@ -284,7 +284,7 @@ export default function DisplayPage() {
               alt="Logo Felicita"
               width={28}
               height={28}
-              className="size-7 shrink-0 rounded-full object-cover ring-2 ring-[#E0B84A]/70"
+              className="size-7 shrink-0 rounded-full object-cover ring-1 ring-black/25"
             />
             <p className="text-[clamp(0.68rem,1.3vh,0.78rem)] text-[#6F6A5C]">
               Demandez à votre serveur pour plus de détails
