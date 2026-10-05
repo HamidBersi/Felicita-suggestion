@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { Wheat } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { DiscreetBackButton, isPwaStandalone } from "@/components/discreet-back-button";
@@ -32,20 +31,14 @@ type Suggestion = {
 
 type LoadState = "loading" | "error" | "ready";
 
-// Image de fond restaurant (cover, center)
-const BACKGROUND_IMAGE =
-  "url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=2070&q=80')";
-
 type Density = "comfortable" | "compact" | "tight";
 
-// Ajoute € automatiquement si le symbole est absent
 function formatPrice(price: string): string {
   const trimmed = price.trim();
   if (!trimmed) return "";
   return trimmed.includes("€") ? trimmed : `${trimmed} €`;
 }
 
-// Compresse l'affichage selon le nombre de suggestions
 function getDensity(count: number): Density {
   if (count >= 7) return "tight";
   if (count >= 5) return "compact";
@@ -55,11 +48,11 @@ function getDensity(count: number): Density {
 function getLabelBadgeClass(color: LabelColor = "orange"): string {
   switch (color) {
     case "red":
-      return "bg-red-600 text-white";
+      return "bg-[#E53935] text-white shadow-sm shadow-red-500/25";
     case "green":
-      return "bg-green-600 text-white";
+      return "bg-[#1E5C45] text-white shadow-sm shadow-emerald-800/25";
     default:
-      return "bg-orange-500 text-black";
+      return "bg-[#E56A45] text-white shadow-sm shadow-orange-500/25";
   }
 }
 
@@ -91,33 +84,19 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
 
   return (
     <article
-      className={`relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-neutral-950/65 shadow-lg backdrop-blur-md ${
-        isTight ? "px-2.5 py-2" : isCompact ? "px-2.5 py-2.5" : "px-3 py-2.5"
+      className={`rounded-2xl border border-[#E8D9B0] border-l-[3px] border-l-[#E0B84A] bg-white shadow-[0_8px_24px_rgba(30,58,47,0.07)] ${
+        isTight ? "px-3.5 py-2.5" : isCompact ? "px-4 py-3" : "px-5 py-3.5"
       }`}
     >
-      {price ? (
-        <p
-          className={`absolute bottom-2.5 right-3 z-10 text-right font-medium text-amber-400/90 ${
-            isTight
-              ? "text-[clamp(0.65rem,1.3vh,0.75rem)]"
-              : isCompact
-                ? "text-[clamp(0.7rem,1.4vh,0.8rem)]"
-                : "text-[clamp(0.75rem,1.55vh,0.88rem)]"
-          }`}
-        >
-          {price}
-        </p>
-      ) : null}
-
-      <div className={`min-w-0 ${price ? "pr-[4.5rem] pb-5" : ""}`}>
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      <div className="flex min-w-0 items-baseline gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
           <h2
-            className={`min-w-0 font-bold leading-tight text-stone-50 ${
+            className={`min-w-0 font-semibold text-[#163D2E] ${
               isTight
-                ? "text-[clamp(0.88rem,1.85vh,1.05rem)]"
+                ? "text-[clamp(0.95rem,2vh,1.15rem)]"
                 : isCompact
-                  ? "text-[clamp(0.95rem,2vh,1.15rem)]"
-                  : "text-[clamp(1.1rem,2.4vh,1.3rem)]"
+                  ? "text-[clamp(1.05rem,2.2vh,1.25rem)]"
+                  : "text-[clamp(1.15rem,2.5vh,1.4rem)]"
             }`}
           >
             {suggestion.title}
@@ -126,30 +105,51 @@ function SuggestionCard({ suggestion, density }: SuggestionCardProps) {
             <span
               className={`shrink-0 rounded-full font-semibold uppercase tracking-wide ${getLabelBadgeClass(suggestion.labelColor ?? "orange")} ${
                 isTight
-                  ? "px-1.5 py-0.5 text-[0.5rem]"
+                  ? "px-1.5 py-0.5 text-[0.55rem]"
                   : isCompact
-                    ? "px-1.5 py-0.5 text-[0.52rem]"
-                    : "px-2 py-0.5 text-[0.58rem]"
+                    ? "px-2 py-0.5 text-[0.58rem]"
+                    : "px-2 py-0.5 text-[0.62rem]"
               }`}
             >
               {suggestion.label}
             </span>
           ) : null}
         </div>
-        {suggestion.description.trim() && (
-          <p
-            className={`mb-1 leading-snug text-stone-300 ${
-              isTight
-                ? "mt-1 text-[clamp(0.68rem,1.35vh,0.78rem)]"
-                : isCompact
-                  ? "mt-1.5 text-[clamp(0.72rem,1.5vh,0.84rem)]"
-                  : "mt-1.5 text-[clamp(0.8rem,1.75vh,0.95rem)]"
-            }`}
-          >
-            {suggestion.description}
-          </p>
-        )}
+
+        {price ? (
+          <>
+            <span
+              className="mb-1 hidden min-w-[1.25rem] flex-1 border-b border-dotted border-[#E0B84A]/55 sm:block"
+              aria-hidden
+            />
+            <span
+              className={`shrink-0 font-bold tabular-nums text-[#C4921A] ${
+                isTight
+                  ? "text-[clamp(0.85rem,1.8vh,1rem)]"
+                  : isCompact
+                    ? "text-[clamp(0.9rem,1.9vh,1.05rem)]"
+                    : "text-[clamp(0.95rem,2vh,1.15rem)]"
+              }`}
+            >
+              {price}
+            </span>
+          </>
+        ) : null}
       </div>
+
+      {suggestion.description.trim() ? (
+        <p
+          className={`max-w-[95%] leading-snug text-[#6F6A5C] ${
+            isTight
+              ? "mt-1 text-[clamp(0.72rem,1.4vh,0.84rem)]"
+              : isCompact
+                ? "mt-1.5 text-[clamp(0.78rem,1.55vh,0.9rem)]"
+                : "mt-1.5 text-[clamp(0.85rem,1.7vh,0.98rem)]"
+          }`}
+        >
+          {suggestion.description}
+        </p>
+      ) : null}
     </article>
   );
 }
@@ -189,75 +189,73 @@ export default function DisplayPage() {
   const density = getDensity(displayed.length);
   const isTight = density === "tight";
   const isCompact = density === "compact" || isTight;
-  const cardsGap = isTight ? "gap-1" : isCompact ? "gap-1" : "gap-1.5";
+  const cardsGap = isTight ? "gap-1.5" : isCompact ? "gap-2" : "gap-2.5";
 
   return (
-    <div className="relative h-dvh max-h-dvh overflow-hidden text-white">
-      {/* Background image */}
+    <div className="relative h-dvh max-h-dvh overflow-hidden bg-[#F7F0E4] text-[#1B1E19]">
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: BACKGROUND_IMAGE }}
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          background:
+            "radial-gradient(ellipse 85% 50% at 50% -8%, rgba(224,184,74,0.36), transparent 55%), radial-gradient(ellipse 50% 35% at 0% 100%, rgba(30,92,69,0.12), transparent 45%), radial-gradient(ellipse 40% 30% at 100% 80%, rgba(229,106,69,0.1), transparent 45%)",
+        }}
       />
-      {/* Overlay sombre pour la lisibilité */}
-      <div className="absolute inset-0 bg-black/60" />
 
       {showPwaBack ? (
         <div className="absolute left-2 top-2 z-20 sm:left-3 sm:top-3">
-          <DiscreetBackButton tone="dark" label="Retour" />
+          <DiscreetBackButton tone="light" label="Retour" />
         </div>
       ) : null}
 
-      <div className="relative z-10 mx-auto flex h-full w-[88%] max-w-2xl flex-col py-1">
-        {/* Header */}
+      <div className="relative z-10 mx-auto flex h-full w-[90%] max-w-2xl flex-col py-2 sm:py-3">
         <header
           className={`shrink-0 text-center ${
-            isTight ? "mb-1" : isCompact ? "mb-1.5" : "mb-2"
+            isTight ? "mb-1.5" : isCompact ? "mb-2" : "mb-3"
           }`}
         >
           <p
-            className={`bg-gradient-to-r from-green-500 via-white to-red-600 bg-clip-text font-[family-name:var(--font-cormorant)] font-normal tracking-[0.2em] text-transparent ${
+            className={`font-[family-name:var(--font-cormorant)] font-light tracking-[0.16em] text-[#0F4C3A] ${
               isTight
-                ? "text-[clamp(1.5rem,3.5vh,2.2rem)]"
-                : "text-[clamp(1.9rem,4.5vh,2.85rem)]"
+                ? "text-[clamp(1.6rem,3.6vh,2.3rem)]"
+                : "text-[clamp(2rem,4.6vh,2.9rem)]"
             }`}
           >
             Felicita
           </p>
-          {/* Ligne décorative tricolore */}
-          <div className="mx-auto mt-0.5 h-0.5 w-20 bg-gradient-to-r from-green-600 via-white to-red-600" />
+          <div className="mx-auto mt-1.5 h-[2px] w-24 rounded-full bg-gradient-to-r from-[#E56A45] via-[#E0B84A] to-[#1E5C45]" />
           <h1
-            className={`font-bold tracking-tight text-white ${
+            className={`font-[family-name:var(--font-cormorant)] font-bold italic tracking-tight text-[#C4921A] ${
               isTight
-                ? "mt-1 text-[clamp(1rem,2.4vh,1.25rem)]"
+                ? "mt-1.5 text-[clamp(1.05rem,2.5vh,1.35rem)]"
                 : isCompact
-                  ? "mt-1 text-[clamp(1.1rem,2.8vh,1.4rem)]"
-                  : "mt-1.5 text-[clamp(1.35rem,3.2vh,1.75rem)]"
+                  ? "mt-2 text-[clamp(1.15rem,2.8vh,1.5rem)]"
+                  : "mt-2 text-[clamp(1.3rem,3.2vh,1.75rem)]"
             }`}
           >
             Suggestions du jour
           </h1>
-          <Wheat
-            className={`mx-auto text-amber-400/50 ${
-              isTight ? "mt-0.5 size-3" : isCompact ? "mt-1 size-3.5" : "mt-1 size-4"
-            }`}
-            aria-hidden
-          />
         </header>
 
-        {/* Cards */}
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {loadState === "loading" && (
-            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
-              Chargement des suggestions...
-            </p>
+            <div className="flex flex-1 flex-col items-center justify-center">
+              <div className="relative size-9">
+                <span className="absolute inset-0 rounded-full border border-[#D9CFB8]" />
+                <span className="absolute inset-[3px] animate-spin rounded-full border-2 border-transparent border-t-[#E0B84A]" />
+              </div>
+              <p className="mt-4 text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-[#6F6A5C]">
+                Chargement des suggestions...
+              </p>
+            </div>
           )}
           {loadState === "error" && (
-            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
+            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-[#6F6A5C]">
               Impossible de charger les suggestions.
             </p>
           )}
           {loadState === "ready" && displayed.length === 0 && (
-            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-stone-400">
+            <p className="flex flex-1 items-center justify-center text-center text-[clamp(0.75rem,1.5vh,0.85rem)] text-[#6F6A5C]">
               Aucune suggestion pour le moment.
             </p>
           )}
@@ -274,22 +272,21 @@ export default function DisplayPage() {
           )}
         </main>
 
-        {/* Footer */}
-        <footer className="shrink-0 pt-2">
-          {hasOverflow && (
-            <p className="mb-1 text-center text-[clamp(0.6rem,1.2vh,0.7rem)] text-amber-200/50">
+        <footer className="shrink-0 pt-2.5 pb-1">
+          {hasOverflow ? (
+            <p className="mb-1.5 text-center text-[clamp(0.65rem,1.25vh,0.75rem)] font-medium text-[#C4921A]">
               Autres suggestions disponibles auprès de votre serveur
             </p>
-          )}
+          ) : null}
           <div className="flex items-center justify-center gap-3">
             <Image
               src="/icons/icon-192.png"
               alt="Logo Felicita"
-              width={32}
-              height={32}
-              className="size-8 shrink-0 rounded-full object-cover"
+              width={28}
+              height={28}
+              className="size-7 shrink-0 rounded-full object-cover ring-2 ring-[#E0B84A]/70"
             />
-            <p className="text-[clamp(0.65rem,1.3vh,0.75rem)] text-amber-200/70">
+            <p className="text-[clamp(0.68rem,1.3vh,0.78rem)] text-[#6F6A5C]">
               Demandez à votre serveur pour plus de détails
             </p>
           </div>
