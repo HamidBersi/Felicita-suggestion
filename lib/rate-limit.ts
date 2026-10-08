@@ -19,3 +19,7 @@ export function registerFailedAttempt(
   current.count += 1;
   return current.count > max;
 }
+
+export function clearFailedAttempts(key: string): void {
+  buckets.delete(key);
+}

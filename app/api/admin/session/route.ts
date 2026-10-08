@@ -2,11 +2,12 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   ADMIN_SESSION_COOKIE,
+  isAdminPinConfigured,
   isValidAdminSessionToken,
 } from "@/lib/admin-session";
 
 export async function GET() {
-  if (!process.env.ADMIN_PIN) {
+  if (!isAdminPinConfigured()) {
     return NextResponse.json({ authenticated: false });
   }
 
