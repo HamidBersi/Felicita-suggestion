@@ -2,15 +2,17 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   OWNER_SESSION_COOKIE,
+  isOwnerPinConfigured,
   isValidOwnerSessionToken,
 } from "@/lib/owner-session";
+import { getSessionSigningKey } from "@/lib/pin";
 
 /** Vérifie le cookie httpOnly de session patron (menu). */
 export async function requireOwner(): Promise<NextResponse | null> {
-  if (!process.env.OWNER_PIN || !process.env.SESSION_SECRET) {
+  if (!isOwnerPinConfigured() || !getSessionSigningKey("OWNER_PIN")) {
     return NextResponse.json(
       { error: "Configuration serveur manquante." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 

@@ -54,7 +54,16 @@ export function PinScreen({
         });
 
         if (!response.ok) {
-          toast.error("Code incorrect");
+          let message = "Code incorrect";
+          try {
+            const data = (await response.json()) as { error?: unknown };
+            if (typeof data.error === "string" && data.error.trim()) {
+              message = data.error;
+            }
+          } catch {
+            // garde le message par défaut
+          }
+          toast.error(message);
           clearAndFocusFirst();
           return;
         }

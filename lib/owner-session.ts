@@ -1,23 +1,29 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { secretsMatch } from "@/lib/pin";
+import { getSessionSigningKey, readEnvSecret, secretsMatch } from "@/lib/pin";
 
 export const OWNER_SESSION_COOKIE = "owner-session";
 const SESSION_PAYLOAD = "felicita-owner-session-v1";
 
+export function isOwnerPinConfigured(): boolean {
+  return readEnvSecret("OWNER_PIN") !== null;
+}
+
 export function isValidOwnerPin(pin: string): boolean {
-  const expected = process.env.OWNER_PIN;
+  const expected = readEnvSecret("OWNER_PIN");
   if (!expected) return false;
-  return secretsMatch(pin, expected);
+  return secretsMatch(pin.trim(), expected);
 }
 
 export function createOwnerSessionToken(): string {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) throw new Error("SESSION_SECRET is not set");
+  const secret = getSessionSigningKey("OWNER_PIN");
+  if (!secret) {
+    throw new Error("SESSION_SECRET or OWNER_PIN is not set");
+  }
   return createHmac("sha256", secret).update(SESSION_PAYLOAD).digest("hex");
 }
 
 export function isValidOwnerSessionToken(token: string | undefined): boolean {
-  if (!token || !process.env.SESSION_SECRET) return false;
+  if (!token || !getSessionSigningKey("OWNER_PIN")) return false;
   try {
     const expected = createOwnerSessionToken();
     const provided = Buffer.from(token);

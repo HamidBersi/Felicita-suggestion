@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import { clientIp } from "@/lib/pin";
-import { registerFailedAttempt } from "@/lib/rate-limit";
+import { clearFailedAttempts, registerFailedAttempt } from "@/lib/rate-limit";
 import {
   OWNER_SESSION_COOKIE,
   createOwnerSessionToken,
   getOwnerSessionCookieOptions,
+  isOwnerPinConfigured,
   isValidOwnerPin,
 } from "@/lib/owner-session";
 
 export async function POST(request: Request) {
+  if (!isOwnerPinConfigured()) {
+    return NextResponse.json(
+      { error: "Configuration serveur manquante." },
+      { status: 503 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -24,8 +32,10 @@ export async function POST(request: Request) {
       ? (body as { pin: string }).pin.trim()
       : "";
 
+  const attemptKey = `owner-login:${clientIp(request)}`;
+
   if (!isValidOwnerPin(pin)) {
-    if (registerFailedAttempt(`owner-login:${clientIp(request)}`)) {
+    if (registerFailedAttempt(attemptKey)) {
       return NextResponse.json(
         { error: "Trop d’essais. Réessaie plus tard." },
         { status: 429 },
@@ -34,10 +44,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Code incorrect." }, { status: 401 });
   }
 
+  let token: string;
+  try {
+    token = createOwnerSessionToken();
+  } catch {
+    return NextResponse.json(
+      { error: "Configuration serveur manquante." },
+      { status: 503 },
+    );
+  }
+
+  clearFailedAttempts(attemptKey);
+
   const response = NextResponse.json({ success: true });
   response.cookies.set(
     OWNER_SESSION_COOKIE,
-    createOwnerSessionToken(),
+    token,
     getOwnerSessionCookieOptions(),
   );
   return response;
