@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/require-admin";
 import {
   SEARCH_MAX_RESULTS,
   SEARCH_MIN_QUERY_LENGTH,
@@ -7,6 +8,9 @@ import {
 } from "@/lib/suggestion-search";
 
 export async function GET(request: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const query = new URL(request.url).searchParams.get("q")?.trim() ?? "";
 
   if (query.length < SEARCH_MIN_QUERY_LENGTH) {

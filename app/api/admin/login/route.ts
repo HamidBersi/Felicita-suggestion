@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/pin";
+import { registerFailedAttempt } from "@/lib/rate-limit";
 import {
   ADMIN_SESSION_COOKIE,
   createAdminSessionToken,
   getAdminSessionCookieOptions,
+  isValidAdminPin,
 } from "@/lib/admin-session";
 
 export async function POST(request: Request) {
-  if (!process.env.ADMIN_PIN) {
-    return NextResponse.json(
-      { error: "Configuration serveur manquante." },
-      { status: 500 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -28,15 +24,21 @@ export async function POST(request: Request) {
       ? (body as { pin: string }).pin.trim()
       : "";
 
-  if (!pin || pin !== process.env.ADMIN_PIN) {
-    return NextResponse.json({ error: "Code incorrect" }, { status: 401 });
+  if (!isValidAdminPin(pin)) {
+    if (registerFailedAttempt(`admin-login:${clientIp(request)}`)) {
+      return NextResponse.json(
+        { error: "Trop d’essais. Réessaie plus tard." },
+        { status: 429 },
+      );
+    }
+    return NextResponse.json({ error: "Code incorrect." }, { status: 401 });
   }
 
   const response = NextResponse.json({ success: true });
   response.cookies.set(
     ADMIN_SESSION_COOKIE,
     createAdminSessionToken(),
-    getAdminSessionCookieOptions()
+    getAdminSessionCookieOptions(),
   );
   return response;
 }

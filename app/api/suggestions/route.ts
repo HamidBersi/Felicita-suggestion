@@ -61,12 +61,18 @@ function validateSuggestionsBody(body: unknown):
       return { error: `Le champ price est invalide à l'index ${index}.` };
     }
 
+    const labelColorRaw = item.labelColor?.trim() || "orange";
+    const labelColor =
+      labelColorRaw === "red" || labelColorRaw === "green" || labelColorRaw === "orange"
+        ? labelColorRaw
+        : "orange";
+
     data.push({
       title,
       price,
       description: item.description?.trim() || null,
       label: item.label?.trim() || null,
-      labelColor: item.labelColor?.trim() || "orange",
+      labelColor,
       position: index,
       isActive: true,
     });

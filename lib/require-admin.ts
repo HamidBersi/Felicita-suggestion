@@ -7,7 +7,7 @@ import {
 
 /** Vérifie le cookie httpOnly de session admin. */
 export async function requireAdmin(): Promise<NextResponse | null> {
-  if (!process.env.ADMIN_PIN) {
+  if (!process.env.ADMIN_PIN || !process.env.SESSION_SECRET) {
     return NextResponse.json(
       { error: "Configuration serveur manquante." },
       { status: 500 }

@@ -7,7 +7,7 @@ import {
 
 /** Vérifie le cookie httpOnly de session patron (menu). */
 export async function requireOwner(): Promise<NextResponse | null> {
-  if (!process.env.OWNER_PIN) {
+  if (!process.env.OWNER_PIN || !process.env.SESSION_SECRET) {
     return NextResponse.json(
       { error: "Configuration serveur manquante." },
       { status: 500 }

@@ -1,17 +1,32 @@
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
+import { requireOwner } from "@/lib/require-owner";
+
+function allowedMenuUrl(candidate: string, origin: string): boolean {
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.origin !== origin) return false;
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    return parsed.pathname === "/menu" || parsed.pathname.startsWith("/menu/");
+  } catch {
+    return false;
+  }
+}
 
 /**
- * QR code pointant vers l'URL publique du menu.
- * Query optionnelle : ?url=https://...
- * Par défaut : origine de la requête + /menu
+ * QR vers le menu public (même origine uniquement).
  */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const customUrl = searchParams.get("url")?.trim();
+  const denied = await requireOwner();
+  if (denied) return denied;
 
   const requestUrl = new URL(request.url);
+  const customUrl = requestUrl.searchParams.get("url")?.trim();
   const menuUrl = customUrl || `${requestUrl.origin}/menu`;
+
+  if (!allowedMenuUrl(menuUrl, requestUrl.origin)) {
+    return NextResponse.json({ error: "URL non autorisée." }, { status: 400 });
+  }
 
   try {
     const png = await QRCode.toBuffer(menuUrl, {
@@ -28,7 +43,6 @@ export async function GET(request: Request) {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "no-store",
-        "X-Menu-Url": menuUrl,
       },
     });
   } catch (error) {

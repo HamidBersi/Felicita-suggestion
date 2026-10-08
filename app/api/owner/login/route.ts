@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/pin";
+import { registerFailedAttempt } from "@/lib/rate-limit";
 import {
   OWNER_SESSION_COOKIE,
   createOwnerSessionToken,
   getOwnerSessionCookieOptions,
+  isValidOwnerPin,
 } from "@/lib/owner-session";
 
 export async function POST(request: Request) {
-  if (!process.env.OWNER_PIN) {
-    return NextResponse.json(
-      { error: "Configuration serveur manquante." },
-      { status: 500 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -28,15 +24,21 @@ export async function POST(request: Request) {
       ? (body as { pin: string }).pin.trim()
       : "";
 
-  if (!pin || pin !== process.env.OWNER_PIN) {
-    return NextResponse.json({ error: "Code incorrect" }, { status: 401 });
+  if (!isValidOwnerPin(pin)) {
+    if (registerFailedAttempt(`owner-login:${clientIp(request)}`)) {
+      return NextResponse.json(
+        { error: "Trop d’essais. Réessaie plus tard." },
+        { status: 429 },
+      );
+    }
+    return NextResponse.json({ error: "Code incorrect." }, { status: 401 });
   }
 
   const response = NextResponse.json({ success: true });
   response.cookies.set(
     OWNER_SESSION_COOKIE,
     createOwnerSessionToken(),
-    getOwnerSessionCookieOptions()
+    getOwnerSessionCookieOptions(),
   );
   return response;
 }

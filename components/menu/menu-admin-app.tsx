@@ -124,7 +124,7 @@ export function MenuAdminApp() {
 
   const loadMenu = useCallback(async () => {
     try {
-      const response = await fetch("/api/menu", { cache: "no-store" });
+      const response = await fetch("/api/owner/menu", { cache: "no-store" });
       if (!response.ok) {
         toast.error("Impossible de charger le menu.");
         return;

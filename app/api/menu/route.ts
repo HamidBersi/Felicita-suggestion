@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       orderBy: { position: "asc" },
       include: {
         items: {
+          where: { isAvailable: true },
           orderBy: { position: "asc" },
         },
       },
