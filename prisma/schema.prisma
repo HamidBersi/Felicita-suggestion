@@ -38,6 +38,8 @@ model MenuItem {
   price       String
   imageUrl    String?
   isAvailable Boolean      @default(true)
+  /** Temporaire : le plat reste sur la carte, affiché « En rupture ». */
+  isHidden    Boolean      @default(false)
   position    Int
   /** Tarifs vin (null = format non proposé) */
   priceVerre     String?

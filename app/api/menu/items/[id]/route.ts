@@ -14,6 +14,7 @@ type UpdateItemBody = {
   price?: string;
   imageUrl?: string | null;
   isAvailable?: boolean;
+  isHidden?: boolean;
   priceVerre?: string | null;
   priceQuart?: string | null;
   priceDemi?: string | null;
@@ -45,6 +46,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     price?: string;
     imageUrl?: string | null;
     isAvailable?: boolean;
+    isHidden?: boolean;
     priceVerre?: string | null;
     priceQuart?: string | null;
     priceDemi?: string | null;
@@ -112,6 +114,13 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (typeof input.isAvailable === "boolean") {
     data.isAvailable = input.isAvailable;
+    if (input.isAvailable === false) {
+      data.isHidden = false;
+    }
+  }
+
+  if (typeof input.isHidden === "boolean") {
+    data.isHidden = input.isHidden;
   }
 
   if ("emoji" in input) {

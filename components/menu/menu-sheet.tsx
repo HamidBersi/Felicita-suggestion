@@ -1,5 +1,5 @@
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
-import { isListedOnMenu } from "@/components/menu/menu-types";
+import { isListedOnMenu, isOutOfStock } from "@/components/menu/menu-types";
 import { DishTitle } from "@/components/menu/dish-title";
 import type { PrintPageSlice } from "@/components/menu/print-pagination";
 import {
@@ -54,6 +54,7 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
       <tbody>
         {items.map((item) => {
           const { title, style } = splitWineName(item.name);
+          const soldOut = isOutOfStock(item);
           return (
             <tr key={item.id} data-item-id={item.id} className="wine-row border-t border-[#E8E1D4]">
               <td className="py-1.5 pr-3">
@@ -62,6 +63,11 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
                 </span>
                 {style ? (
                   <span className="ml-1.5 text-[11px] text-[#8a8578]">{style}</span>
+                ) : null}
+                {soldOut ? (
+                  <p className="mt-0.5 text-[11px] font-medium tracking-[0.16em] text-[#8F6A24] uppercase">
+                    En rupture
+                  </p>
                 ) : null}
                 {item.description?.trim() ? (
                   <p className="mt-0.5 text-[12px] italic text-[#6b6a5f]">
@@ -74,7 +80,7 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
                   key={column.key}
                   className="py-1.5 pr-2 text-left font-semibold tabular-nums text-black"
                 >
-                  {item[column.key] ? formatEuro(item[column.key]) : "—"}
+                  {soldOut || !item[column.key] ? "—" : formatEuro(item[column.key])}
                 </td>
               ))}
             </tr>
@@ -86,6 +92,8 @@ function WineTable({ items }: { items: MenuItemDto[] }) {
 }
 
 function DishBlock({ item }: { item: MenuItemDto }) {
+  const soldOut = isOutOfStock(item);
+
   return (
     <article className="menu-dish" data-item-id={item.id}>
       <div className="flex items-baseline gap-2">
@@ -96,9 +104,15 @@ function DishBlock({ item }: { item: MenuItemDto }) {
           className="mb-0.5 min-w-[1rem] flex-1 border-b border-dotted border-[#b9b19b]"
           aria-hidden
         />
-        <span className="shrink-0 text-[15px] font-semibold text-black">
-          {formatEuro(item.price)}
-        </span>
+        {soldOut ? (
+          <span className="shrink-0 text-[11px] font-medium tracking-[0.16em] text-[#8F6A24] uppercase">
+            En rupture
+          </span>
+        ) : (
+          <span className="shrink-0 text-[15px] font-semibold text-black">
+            {formatEuro(item.price)}
+          </span>
+        )}
       </div>
       {item.description?.trim() ? (
         <p className="mt-0.5 max-w-[95%] text-[13px] italic leading-snug text-[#6b6a5f]">

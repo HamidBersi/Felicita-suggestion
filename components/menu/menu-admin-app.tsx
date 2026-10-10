@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, LogOut, Menu, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
+import { EyeOff, GripVertical, LogOut, Menu, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -109,6 +109,7 @@ export function MenuAdminApp() {
   const [pendingDelete, setPendingDelete] = useState<MenuItemDto | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [reordering, setReordering] = useState(false);
+  const [hiddenPanelOpen, setHiddenPanelOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -175,6 +176,49 @@ export function MenuAdminApp() {
   const isWineForm = Boolean(
     selectedCategory && isWineCategoryName(selectedCategory.name),
   );
+
+  const hiddenItems = useMemo(
+    () =>
+      categories.flatMap((category) =>
+        category.items
+          .filter((item) => item.isHidden)
+          .map((item) => ({ item, categoryName: category.name })),
+      ),
+    [categories],
+  );
+
+  function patchItemHidden(id: string, isHidden: boolean) {
+    setCategories((current) =>
+      current.map((category) => ({
+        ...category,
+        items: category.items.map((item) =>
+          item.id === id ? { ...item, isHidden } : item,
+        ),
+      })),
+    );
+  }
+
+  async function toggleHidden(item: MenuItemDto) {
+    const nextHidden = !item.isHidden;
+    patchItemHidden(item.id, nextHidden);
+    try {
+      const response = await fetch(`/api/menu/items/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isHidden: nextHidden }),
+      });
+      if (!response.ok) {
+        patchItemHidden(item.id, Boolean(item.isHidden));
+        toast.error("Impossible de mettre à jour le plat.");
+        return;
+      }
+      toast.success(nextHidden ? "Plat en rupture" : "Plat remis sur la carte");
+    } catch {
+      patchItemHidden(item.id, Boolean(item.isHidden));
+      toast.error("Erreur réseau.");
+    }
+  }
 
   function selectFamily(next: MenuFamilyId) {
     setFamilyId(next);
@@ -645,15 +689,77 @@ export function MenuAdminApp() {
                   <h2 className="font-[family-name:var(--font-cormorant)] text-[28px] font-bold italic text-[#8F6A24]">
                     {selectedCategory?.name ?? "Aucune catégorie"}
                   </h2>
-                  <button
-                    type="button"
-                    onClick={openCreate}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-[#B68A3D] px-4 py-2.5 text-[13.5px] font-semibold text-[#1E3A2F] transition hover:bg-[#D8B871]"
-                  >
-                    <Plus className="size-4" />
-                    Ajouter un plat
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setHiddenPanelOpen((open) => !open)}
+                      className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-semibold transition ${
+                        hiddenItems.length > 0
+                          ? "border-[#E0B4B0] bg-[#F8EEEE] text-[#6E2A2A] hover:bg-[#F3E0DE]"
+                          : "border-[#D9CFB8] bg-white text-[#6b6a5f] hover:bg-[#FBF8F1]"
+                      }`}
+                    >
+                      <EyeOff className="size-3.5" />
+                      Masqués
+                      <span className="rounded-full bg-white/70 px-1.5 text-[11px] tabular-nums">
+                        {hiddenItems.length}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openCreate}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-[#B68A3D] px-4 py-2.5 text-[13.5px] font-semibold text-[#1E3A2F] transition hover:bg-[#D8B871]"
+                    >
+                      <Plus className="size-4" />
+                      Ajouter un plat
+                    </button>
+                  </div>
                 </div>
+
+                {hiddenPanelOpen ? (
+                  <div className="mb-5 rounded-[10px] border border-[#E0B4B0] bg-[#FBF6F5] px-4 py-3.5">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-[13.5px] font-semibold text-[#6E2A2A]">
+                        Plats en rupture
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setHiddenPanelOpen(false)}
+                        className="text-[12px] font-semibold text-[#6b6a5f] hover:text-[#1E3A2F]"
+                      >
+                        Fermer
+                      </button>
+                    </div>
+                    {hiddenItems.length === 0 ? (
+                      <p className="text-sm text-[#6b6a5f]">
+                        Aucun plat masqué pour le moment.
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {hiddenItems.map(({ item, categoryName }) => (
+                          <li
+                            key={item.id}
+                            className="flex min-w-0 items-center justify-between gap-3 rounded-md bg-white px-3 py-2"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate font-[family-name:var(--font-cormorant)] text-[17px] font-semibold">
+                                <DishTitle name={item.name} emoji={item.emoji} />
+                              </p>
+                              <p className="text-[12px] text-[#8a8578]">{categoryName}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => void toggleHidden(item)}
+                              className="shrink-0 rounded-md border border-[#D9CFB8] bg-[#FBF8F1] px-2.5 py-1.5 text-[12px] font-semibold text-[#1E3A2F] hover:bg-white"
+                            >
+                              Remettre
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : null}
 
                 {!selectedCategory || selectedCategory.items.length === 0 ? (
                   <div className="rounded-[10px] border border-dashed border-[#D9CFB8] px-8 py-10 text-center text-[#6b6a5f]">
@@ -677,6 +783,7 @@ export function MenuAdminApp() {
                             disabled={reordering}
                             onEdit={() => openEdit(item)}
                             onDelete={() => setPendingDelete(item)}
+                            onToggleHidden={() => void toggleHidden(item)}
                           />
                         ))}
                       </div>
@@ -1071,11 +1178,13 @@ function SortableMenuItem({
   disabled,
   onEdit,
   onDelete,
+  onToggleHidden,
 }: {
   item: MenuItemDto;
   disabled?: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleHidden: () => void;
 }) {
   const {
     attributes,
@@ -1096,7 +1205,11 @@ function SortableMenuItem({
     <article
       ref={setNodeRef}
       style={style}
-      className="flex min-w-0 flex-col gap-1.5 rounded-[10px] border border-[#D9CFB8] bg-white px-4 py-3.5"
+      className={`flex min-w-0 flex-col gap-1.5 rounded-[10px] border px-4 py-3.5 ${
+        item.isHidden
+          ? "border-[#E0B4B0] bg-[#FBF6F5]"
+          : "border-[#D9CFB8] bg-white"
+      }`}
     >
       <div className="flex min-w-0 items-start gap-2.5">
         <button
@@ -1137,7 +1250,31 @@ function SortableMenuItem({
           {item.description}
         </p>
       ) : null}
-      <div className="mt-2 flex justify-end gap-2 border-t border-[#EFE8DC] pt-2.5">
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-[#EFE8DC] pt-2.5">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={Boolean(item.isHidden)}
+          onClick={onToggleHidden}
+          className={`mr-auto inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[12px] font-semibold transition ${
+            item.isHidden
+              ? "border-[#E0B4B0] bg-white text-[#6E2A2A]"
+              : "border-[#D9CFB8] bg-[#FBF8F1] text-[#1E3A2F]"
+          }`}
+        >
+          <span
+            className={`relative h-4 w-7 rounded-full transition ${
+              item.isHidden ? "bg-[#6E2A2A]" : "bg-[#B68A3D]"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 size-3 rounded-full bg-white transition ${
+                item.isHidden ? "left-3.5" : "left-0.5"
+              }`}
+            />
+          </span>
+          {item.isHidden ? "Masqué" : "Sur la carte"}
+        </button>
         <button
           type="button"
           className="rounded-md border border-[#D9CFB8] bg-[#FBF8F1] px-3 py-1.5 text-[13px] font-semibold text-[#1E3A2F] transition hover:border-[#1E3A2F]/35 hover:bg-white"

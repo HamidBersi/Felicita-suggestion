@@ -17,7 +17,7 @@ import {
 import { MenuFamilyBar } from "@/components/menu/menu-family-bar";
 import { DishTitle } from "@/components/menu/dish-title";
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
-import { isListedOnMenu } from "@/components/menu/menu-types";
+import { isListedOnMenu, isOutOfStock } from "@/components/menu/menu-types";
 import {
   formatEuro,
   hasWineTiers,
@@ -184,8 +184,17 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
   );
 }
 
+function SoldOutMark({ label }: { label: string }) {
+  return (
+    <span className="shrink-0 pt-0.5 text-[11px] font-medium tracking-[0.16em] text-[#8F6A24]/80 uppercase">
+      {label}
+    </span>
+  );
+}
+
 function WineRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
   const ui = tUi(locale);
+  const soldOut = isOutOfStock(item);
   const translated = translateItem(locale, item.name, item.description);
   const headline = item.priceVerre || item.priceBouteille || item.price;
   const formats = [
@@ -201,28 +210,40 @@ function WineRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
   return (
     <article className="min-w-0">
       <div className="flex min-w-0 items-baseline gap-2">
-        <h3 className="min-w-0 text-[15.5px] font-semibold break-words text-[#1B1E19]">
+        <h3
+          className={`min-w-0 text-[15.5px] font-semibold break-words ${
+            soldOut ? "text-[#1B1E19]/55" : "text-[#1B1E19]"
+          }`}
+        >
           <DishTitle name={translated.name} emoji={item.emoji} />
         </h3>
         <span
           className="mb-1 min-w-[1.25rem] flex-1 border-b border-dotted border-[#cfc8b8]"
           aria-hidden
         />
-        <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[#1B1E19]">
-          {formatEuro(headline)}
-        </span>
+        {soldOut ? (
+          <SoldOutMark label={ui.soldOut} />
+        ) : (
+          <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[#1B1E19]">
+            {formatEuro(headline)}
+          </span>
+        )}
       </div>
       {formats.length > 0 ? (
         <p className="mt-1 flex flex-wrap gap-x-3.5 gap-y-0.5 text-[13px] font-normal text-[#7a766c]">
           {formats.map((column) => (
             <span key={column.key} className="tabular-nums">
-              {column.label} {formatEuro(item[column.key])}
+              {column.label} {soldOut ? "—" : formatEuro(item[column.key])}
             </span>
           ))}
         </p>
       ) : null}
       {translated.description ? (
-        <p className="mt-1 max-w-[92%] text-[13px] leading-snug text-[#7a766c]">
+        <p
+          className={`mt-1 max-w-[92%] text-[13px] leading-snug ${
+            soldOut ? "text-[#7a766c]/70" : "text-[#7a766c]"
+          }`}
+        >
           {translated.description}
         </p>
       ) : null}
@@ -235,6 +256,7 @@ function DishRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
     return <WineRow item={item} locale={locale} />;
   }
 
+  const soldOut = isOutOfStock(item);
   const translated = translateItem(locale, item.name, item.description);
   const { title, volume } = splitNameAndVolume(translated.name);
   const description = isFishOfTheDay(item.name)
@@ -244,7 +266,11 @@ function DishRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
   return (
     <article className="min-w-0">
       <div className="flex min-w-0 items-baseline gap-2">
-        <h3 className="min-w-0 text-[15.5px] font-semibold break-words text-[#1B1E19]">
+        <h3
+          className={`min-w-0 text-[15.5px] font-semibold break-words ${
+            soldOut ? "text-[#1B1E19]/55" : "text-[#1B1E19]"
+          }`}
+        >
           <DishTitle name={title} emoji={item.emoji} />
           {volume ? (
             <span className="ml-1.5 font-normal text-[#8a8578]">{volume}</span>
@@ -254,12 +280,20 @@ function DishRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
           className="mb-1 min-w-[1.25rem] flex-1 border-b border-dotted border-[#cfc8b8]"
           aria-hidden
         />
-        <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[#1B1E19]">
-          {formatMenuPrice(item.price)}
-        </span>
+        {soldOut ? (
+          <SoldOutMark label={tUi(locale).soldOut} />
+        ) : (
+          <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[#1B1E19]">
+            {formatMenuPrice(item.price)}
+          </span>
+        )}
       </div>
       {description ? (
-        <p className="mt-0.5 max-w-[92%] text-[13px] leading-snug text-[#7a766c]">
+        <p
+          className={`mt-0.5 max-w-[92%] text-[13px] leading-snug ${
+            soldOut ? "text-[#7a766c]/70" : "text-[#7a766c]"
+          }`}
+        >
           {description}
         </p>
       ) : null}

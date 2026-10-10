@@ -35,6 +35,7 @@ export function hashPrintSlice(slice: PrintPageSlice): string {
             item.emoji ?? "",
             item.description ?? "",
             item.isAvailable ? "1" : "0",
+            item.isHidden ? "1" : "0",
           ].join(":"),
         ),
       ].join("|"),

@@ -5,6 +5,7 @@ export type MenuItemDto = {
   price: string;
   imageUrl: string | null;
   isAvailable: boolean;
+  isHidden?: boolean;
   position: number;
   categoryId: string;
   priceVerre?: string | null;
@@ -26,4 +27,9 @@ export type MenuCategoryDto = {
 /** L’édition liste tout ; aperçu / print cachent seulement un `false` explicite. */
 export function isListedOnMenu(item: Pick<MenuItemDto, "isAvailable">): boolean {
   return item.isAvailable !== false;
+}
+
+/** Masqué temporairement : reste sur la carte, indiqué « En rupture ». */
+export function isOutOfStock(item: Pick<MenuItemDto, "isHidden">): boolean {
+  return item.isHidden === true;
 }
