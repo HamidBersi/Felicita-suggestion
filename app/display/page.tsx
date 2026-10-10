@@ -4,6 +4,12 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { DiscreetBackButton, isPwaStandalone } from "@/components/discreet-back-button";
+import {
+  MENU_FROM_APP_HREF,
+  MENU_HREF,
+  MenuStickyCta,
+} from "@/components/menu/suggestions-cta";
+import { readStoredMenuLocale } from "@/components/menu/i18n";
 
 const MAX_DISPLAYED = 8;
 
@@ -158,9 +164,18 @@ export default function DisplayPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [showPwaBack, setShowPwaBack] = useState(false);
+  const [fromMenu, setFromMenu] = useState(false);
+  const [menuHref, setMenuHref] = useState(MENU_HREF);
+  const [locale, setLocale] = useState(readStoredMenuLocale);
 
   useEffect(() => {
-    setShowPwaBack(isPwaStandalone());
+    const standalone = isPwaStandalone();
+    const cameFromMenu =
+      new URLSearchParams(window.location.search).get("from") === "menu";
+    setShowPwaBack(standalone);
+    setFromMenu(cameFromMenu);
+    setMenuHref(standalone ? MENU_FROM_APP_HREF : MENU_HREF);
+    setLocale(readStoredMenuLocale());
   }, []);
 
   useEffect(() => {
@@ -272,7 +287,9 @@ export default function DisplayPage() {
           )}
         </main>
 
-        <footer className="shrink-0 pt-2.5 pb-1">
+        {fromMenu ? <MenuStickyCta locale={locale} href={menuHref} /> : null}
+
+        <footer className={`shrink-0 pt-2.5 pb-1 ${fromMenu ? "pb-16" : ""}`}>
           {hasOverflow ? (
             <p className="mb-1.5 text-center text-[clamp(0.65rem,1.25vh,0.75rem)] font-medium text-[#C4921A]">
               Autres suggestions disponibles auprès de votre serveur

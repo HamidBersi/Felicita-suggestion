@@ -60,9 +60,14 @@ function goBack() {
 type MenuTopNavProps = {
   locale: MenuLocale;
   onLocaleChange: (locale: MenuLocale) => void;
+  showBack?: boolean;
 };
 
-export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
+export function MenuTopNav({
+  locale,
+  onLocaleChange,
+  showBack = false,
+}: MenuTopNavProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const ui = tUi(locale);
@@ -87,12 +92,23 @@ export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
   return (
     <header className="relative z-[110] flex items-center justify-between gap-3 border-b border-[#e4dfd4] bg-[#F4F1EA]/95 px-4 py-3 backdrop-blur-sm sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
-        <button
-          type="button"
-          onClick={goBack}
-          aria-label={ui.backLabel}
-          className="shrink-0 rounded-full transition active:scale-95 hover:opacity-90"
-        >
+        {showBack ? (
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label={ui.backLabel}
+            className="shrink-0 rounded-full transition active:scale-95 hover:opacity-90"
+          >
+            <Image
+              src="/felicita-logo.jpg"
+              alt=""
+              width={52}
+              height={52}
+              className="size-[52px] rounded-full object-cover ring-1 ring-[#1B1E19]/20"
+              priority
+            />
+          </button>
+        ) : (
           <Image
             src="/felicita-logo.jpg"
             alt="La Félicità"
@@ -101,7 +117,7 @@ export function MenuTopNav({ locale, onLocaleChange }: MenuTopNavProps) {
             className="size-[52px] rounded-full object-cover ring-1 ring-[#1B1E19]/20"
             priority
           />
-        </button>
+        )}
         <div className="min-w-0">
           <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] leading-none font-semibold tracking-wide text-[#1E3A2F]">
             La Félicità

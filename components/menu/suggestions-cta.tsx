@@ -101,6 +101,9 @@ export function SuggestionsFishCard({ locale }: { locale: MenuLocale }) {
   );
 }
 
+export const MENU_HREF = "/menu";
+export const MENU_FROM_APP_HREF = "/menu?from=app";
+
 export function SuggestionsStickyCta({
   locale,
   hidden = false,
@@ -140,6 +143,53 @@ export function SuggestionsStickyCta({
           <span aria-hidden className="text-[#D8B871]">
             →
           </span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export function MenuStickyCta({
+  locale,
+  hidden = false,
+  href = MENU_HREF,
+}: {
+  locale: MenuLocale;
+  hidden?: boolean;
+  href?: string;
+}) {
+  const ui = tUi(locale);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    function onScroll() {
+      const y = window.scrollY;
+      const goingDown = y > lastY;
+      setVisible(y < 48 || !goingDown);
+      lastY = y;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (hidden) return null;
+
+  return (
+    <div
+      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1.35rem,calc(env(safe-area-inset-bottom)+0.75rem))] transition duration-300 ${
+        visible ? "translate-y-0 opacity-100" : "translate-y-[120%] opacity-0"
+      }`}
+    >
+      <div className="pointer-events-auto w-full max-w-2xl">
+        <Link
+          href={href}
+          className="mx-auto flex w-[min(100%,22rem)] items-center justify-center gap-1.5 rounded-full border border-[#D8B871]/50 bg-gradient-to-br from-[#1E3A2F] via-[#244A3A] to-[#8F6A24] px-5 py-3 text-center text-[13.5px] font-semibold text-[#FBF8F1] shadow-[0_8px_22px_rgba(30,58,47,0.22)] transition hover:brightness-105"
+        >
+          <span aria-hidden className="text-[#D8B871]">
+            ←
+          </span>
+          {ui.menuCta}
         </Link>
       </div>
     </div>

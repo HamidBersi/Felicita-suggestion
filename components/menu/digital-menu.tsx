@@ -37,6 +37,7 @@ import {
 
 type DigitalMenuProps = {
   categories: MenuCategoryDto[];
+  embedded?: boolean;
 };
 
 function formatMenuPrice(price: string): string {
@@ -50,10 +51,11 @@ function splitNameAndVolume(name: string): { title: string; volume: string | nul
   return { title: match[1], volume: match[2].replace(/\s+/g, "") };
 }
 
-export function DigitalMenu({ categories }: DigitalMenuProps) {
+export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) {
   const [familyId, setFamilyId] = useState<MenuFamilyId>("all");
   const [subCategoryName, setSubCategoryName] = useState<string | null>(null);
   const [locale, setLocale] = useState<MenuLocale>("fr");
+  const [showBack, setShowBack] = useState(false);
   const ui = tUi(locale);
 
   useEffect(() => {
@@ -61,6 +63,15 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
     setLocale(stored);
     document.documentElement.lang = stored;
   }, []);
+
+  useEffect(() => {
+    if (embedded) {
+      setShowBack(false);
+      return;
+    }
+    const fromApp = new URLSearchParams(window.location.search).get("from") === "app";
+    setShowBack(fromApp);
+  }, [embedded]);
 
   function handleLocaleChange(next: MenuLocale) {
     setLocale(next);
@@ -132,7 +143,11 @@ export function DigitalMenu({ categories }: DigitalMenuProps) {
   return (
     <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-24">
       <div className="sticky top-0 z-30 min-w-0 bg-[#F4F1EA]/95 backdrop-blur-sm">
-        <MenuTopNav locale={locale} onLocaleChange={handleLocaleChange} />
+        <MenuTopNav
+          locale={locale}
+          onLocaleChange={handleLocaleChange}
+          showBack={showBack}
+        />
         <div className="min-w-0 px-4 py-3 sm:px-6">
           <MenuFamilyBar
             familyId={familyId}

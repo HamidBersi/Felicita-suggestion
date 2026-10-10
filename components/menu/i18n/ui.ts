@@ -13,6 +13,7 @@ type UiStrings = {
   loadError: string;
   soldOut: string;
   suggestionsCta: string;
+  menuCta: string;
   suggestionsHint: string;
   suggestionsCardTitle: string;
   suggestionsCardSubtitle: string;
@@ -35,6 +36,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     loadError: "Impossible de charger le menu.",
     soldOut: "En rupture",
     suggestionsCta: "Découvrez nos suggestions du jour",
+    menuCta: "Retour au menu",
     suggestionsHint: "Aussi : suggestions du jour →",
     suggestionsCardTitle: "Suggestions du jour",
     suggestionsCardSubtitle: "Poissons & plats du moment",
@@ -59,6 +61,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     loadError: "Unable to load the menu.",
     soldOut: "Sold out",
     suggestionsCta: "Discover today’s specials",
+    menuCta: "Back to the menu",
     suggestionsHint: "Also: today’s specials →",
     suggestionsCardTitle: "Today’s specials",
     suggestionsCardSubtitle: "Fish & dishes of the moment",
@@ -83,6 +86,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     loadError: "Menü konnte nicht geladen werden.",
     soldOut: "Ausverkauft",
     suggestionsCta: "Entdecken Sie die Tagesempfehlungen",
+    menuCta: "Zurück zur Speisekarte",
     suggestionsHint: "Auch: Tagesempfehlungen →",
     suggestionsCardTitle: "Tagesempfehlungen",
     suggestionsCardSubtitle: "Fisch & Gerichte des Moments",
@@ -107,6 +111,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     loadError: "Impossibile caricare il menu.",
     soldOut: "Esaurito",
     suggestionsCta: "Scoprite i suggerimenti del giorno",
+    menuCta: "Torna al menu",
     suggestionsHint: "Anche: suggerimenti del giorno →",
     suggestionsCardTitle: "Suggerimenti del giorno",
     suggestionsCardSubtitle: "Pesce e piatti del momento",

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { DiscreetBackButton, isPwaStandalone } from "@/components/discreet-back-button";
 import { Button } from "@/components/ui/button";
 import { ADMIN_AUTH_KEY, PIN_LENGTH } from "@/lib/admin-auth";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export function PinScreen({
     () => Array(PIN_LENGTH).fill(""),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPwaBack, setShowPwaBack] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const focusInput = useCallback((index: number) => {
@@ -84,6 +86,10 @@ export function PinScreen({
   useEffect(() => {
     focusInput(0);
   }, [focusInput]);
+
+  useEffect(() => {
+    setShowPwaBack(isPwaStandalone());
+  }, []);
 
   useEffect(() => {
     const code = digits.join("");
@@ -150,6 +156,11 @@ export function PinScreen({
 
   return (
     <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-[#F7F2E7] p-6">
+      {showPwaBack ? (
+        <div className="absolute left-3 top-3 z-20 sm:left-4 sm:top-4">
+          <DiscreetBackButton tone="light" label="Retour" />
+        </div>
+      ) : null}
       <div className="relative w-full max-w-md">
         <div className="rounded-xl border border-[#D9CFB8] bg-white p-8 shadow-none">
           <div className="mb-8 text-center">

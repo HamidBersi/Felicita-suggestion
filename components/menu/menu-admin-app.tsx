@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { EyeOff, GripVertical, LogOut, Menu, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
+import { Eye, EyeOff, GripVertical, LogOut, Menu, Pencil, Plus, Printer, QrCode, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -49,7 +49,6 @@ import {
   type PrintPageSlice,
 } from "@/components/menu/print-pagination";
 import { useOwnerLogout } from "@/components/menu/owner-gate";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Toaster } from "@/components/ui/sonner";
@@ -105,11 +104,12 @@ export function MenuAdminApp() {
   const [saving, setSaving] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
   const [menuPublicUrl, setMenuPublicUrl] = useState("/menu");
   const [pendingDelete, setPendingDelete] = useState<MenuItemDto | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [reordering, setReordering] = useState(false);
-  const [hiddenPanelOpen, setHiddenPanelOpen] = useState(false);
+  const [hiddenModalOpen, setHiddenModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -154,13 +154,36 @@ export function MenuAdminApp() {
   }, []);
 
   useEffect(() => {
-    if (!pendingDelete) return;
+    if (!pendingDelete && !hiddenModalOpen) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape" && !deleting) setPendingDelete(null);
+      if (event.key !== "Escape") return;
+      if (pendingDelete && !deleting) setPendingDelete(null);
+      else if (hiddenModalOpen) setHiddenModalOpen(false);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pendingDelete, deleting]);
+  }, [pendingDelete, deleting, hiddenModalOpen]);
+
+  useEffect(() => {
+    if (!navOpen) return;
+
+    function onPointerDown(event: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setNavOpen(false);
+      }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setNavOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [navOpen]);
 
   const selectedCategory = useMemo(
     () => categories.find((category) => category.id === selectedCategoryId) ?? null,
@@ -522,144 +545,164 @@ export function MenuAdminApp() {
   return (
     <div className="menu-admin-root flex min-h-dvh flex-1 flex-col bg-[#F7F2E7] text-[#1B1E19]">
       <header className="menu-admin-chrome shrink-0 bg-[#1E3A2F] text-[#FBF8F1]">
-        <div className="flex items-center justify-between gap-3 px-5 py-3.5">
-          <div className="flex min-w-0 items-baseline gap-2.5">
-            <span className="font-[family-name:var(--font-cormorant)] text-[22px] tracking-wide">
-              Le Menu
-            </span>
-            <span className="hidden text-xs tracking-wide text-[#D8B871] sm:inline">
-              espace admin
-            </span>
+        <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <img
+              src="/felicita-logo.jpg"
+              alt=""
+              width={40}
+              height={40}
+              draggable={false}
+              className="size-10 rounded-full object-cover"
+            />
+            <div className="min-w-0 leading-tight">
+              <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] tracking-wide">
+                La Félicità
+              </p>
+              <p className="text-[11px] font-medium tracking-wide text-[#D8B871]">
+                espace admin
+              </p>
+            </div>
           </div>
 
-          <div className="hidden items-center gap-3 lg:flex">
-            <div className="flex rounded-lg bg-black/20 p-1">
+          <div className="ml-auto hidden items-center gap-1.5 md:flex">
+            <div className="flex rounded-full bg-black/20 p-0.5">
               <button
                 type="button"
                 onClick={() => setView("edit")}
-                className={`rounded-md px-3.5 py-2 text-sm transition ${
+                className={`rounded-full px-3 py-1 text-[13px] font-medium transition ${
                   view === "edit"
-                    ? "bg-[#B68A3D] font-semibold text-[#1E3A2F]"
-                    : "text-[#FBF8F1] hover:bg-white/10"
-                }`}
-              >
-                Éditer le menu
-              </button>
-              <button
-                type="button"
-                onClick={() => setView("preview")}
-                className={`rounded-md px-3.5 py-2 text-sm transition ${
-                  view === "preview"
-                    ? "bg-[#B68A3D] font-semibold text-[#1E3A2F]"
-                    : "text-[#FBF8F1] hover:bg-white/10"
-                }`}
-              >
-                Aperçu / menu digital
-              </button>
-            </div>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#D8B871]/70 px-3 py-2 text-[13px] text-[#FBF8F1] transition hover:bg-white/10"
-              onClick={openPrintModal}
-            >
-              <Printer className="size-3.5" />
-              Imprimer
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#B68A3D] px-3 py-2 text-[13px] font-semibold text-[#1E3A2F] transition hover:bg-[#D8B871]"
-              onClick={() => setQrOpen(true)}
-            >
-              <QrCode className="size-3.5" />
-              QR code
-            </button>
-            <Button
-              type="button"
-              variant="outline"
-              className="border-[#D8B871]/50 bg-transparent text-[#FBF8F1] hover:bg-white/10 hover:text-white"
-              onClick={logout}
-            >
-              <LogOut className="size-4" />
-              Quitter
-            </Button>
-          </div>
-
-          <button
-            type="button"
-            className="flex size-10 items-center justify-center rounded-md hover:bg-white/10 lg:hidden"
-            aria-label={navOpen ? "Fermer le menu" : "Ouvrir le menu"}
-            aria-expanded={navOpen}
-            onClick={() => setNavOpen((open) => !open)}
-          >
-            {navOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
-        </div>
-
-        {navOpen ? (
-          <div className="space-y-3 border-t border-white/10 px-4 py-3 lg:hidden">
-            <div className="flex rounded-lg bg-black/20 p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setView("edit");
-                  setNavOpen(false);
-                }}
-                className={`flex-1 rounded-md px-3 py-2 text-sm transition ${
-                  view === "edit"
-                    ? "bg-[#B68A3D] font-semibold text-[#1E3A2F]"
-                    : "text-[#FBF8F1]"
+                    ? "bg-white text-[#1E3A2F] shadow-sm"
+                    : "text-[#FBF8F1]/85 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 Éditer
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setView("preview");
-                  setNavOpen(false);
-                }}
-                className={`flex-1 rounded-md px-3 py-2 text-sm transition ${
+                onClick={() => setView("preview")}
+                className={`rounded-full px-3 py-1 text-[13px] font-medium transition ${
                   view === "preview"
-                    ? "bg-[#B68A3D] font-semibold text-[#1E3A2F]"
-                    : "text-[#FBF8F1]"
+                    ? "bg-white text-[#1E3A2F] shadow-sm"
+                    : "text-[#FBF8F1]/85 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 Aperçu
               </button>
             </div>
+
+            <span className="mx-0.5 h-4 w-px bg-white/20" aria-hidden />
+
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-[#D8B871]/70 px-3 py-2.5 text-[13px]"
-              onClick={() => {
-                setNavOpen(false);
-                openPrintModal();
-              }}
+              title="Imprimer"
+              aria-label="Imprimer"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[#FBF8F1]/90 transition hover:bg-white/15 hover:text-white"
+              onClick={openPrintModal}
             >
               <Printer className="size-3.5" />
-              Imprimer
+              <span className="text-[12px] font-medium">Imprimer</span>
             </button>
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-1.5 rounded-md bg-[#B68A3D] px-3 py-2.5 text-[13px] font-semibold text-[#1E3A2F]"
-              onClick={() => {
-                setNavOpen(false);
-                setQrOpen(true);
-              }}
+              title="QR code"
+              aria-label="QR code"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#B68A3D] px-2.5 text-[#1E3A2F] transition hover:bg-[#D8B871]"
+              onClick={() => setQrOpen(true)}
             >
               <QrCode className="size-3.5" />
-              QR code
+              <span className="text-[12px] font-semibold">QR</span>
             </button>
-            <Button
+            <button
               type="button"
-              variant="outline"
-              className="w-full border-[#D8B871]/50 bg-transparent text-[#FBF8F1] hover:bg-white/10 hover:text-white"
+              title="Quitter"
+              aria-label="Quitter"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[#FBF8F1]/90 transition hover:bg-white/15 hover:text-white"
               onClick={logout}
             >
-              <LogOut className="size-4" />
-              Quitter
-            </Button>
+              <LogOut className="size-3.5" />
+              <span className="text-[12px] font-medium">Quitter</span>
+            </button>
           </div>
-        ) : null}
+
+          <div ref={navRef} className="relative ml-auto md:hidden">
+            <button
+              type="button"
+              className="flex size-10 items-center justify-center rounded-full hover:bg-white/15"
+              aria-label={navOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen((open) => !open)}
+            >
+              {navOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+
+            {navOpen ? (
+              <div className="absolute top-full right-0 z-40 mt-2 w-52 overflow-hidden rounded-xl bg-white py-1 text-[#1B1E19] shadow-[0_12px_32px_rgba(27,30,25,0.18)] ring-1 ring-[#1B1E19]/8">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setView("edit");
+                    setNavOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition ${
+                    view === "edit"
+                      ? "bg-[#F4F1EA] font-medium text-[#1E3A2F]"
+                      : "hover:bg-[#F4F1EA]/80"
+                  }`}
+                >
+                  <Pencil className="size-3.5" />
+                  Éditer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setView("preview");
+                    setNavOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition ${
+                    view === "preview"
+                      ? "bg-[#F4F1EA] font-medium text-[#1E3A2F]"
+                      : "hover:bg-[#F4F1EA]/80"
+                  }`}
+                >
+                  <Eye className="size-3.5" />
+                  Aperçu
+                </button>
+                <div className="my-1 h-px bg-[#1B1E19]/8" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNavOpen(false);
+                    openPrintModal();
+                  }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] hover:bg-[#F4F1EA]/80"
+                >
+                  <Printer className="size-3.5" />
+                  Imprimer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNavOpen(false);
+                    setQrOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] hover:bg-[#F4F1EA]/80"
+                >
+                  <QrCode className="size-3.5" />
+                  QR code
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] text-[#6E2A2A] hover:bg-[#F4F1EA]/80"
+                >
+                  <LogOut className="size-3.5" />
+                  Quitter
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </header>
 
       {view === "edit" ? (
@@ -692,7 +735,7 @@ export function MenuAdminApp() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setHiddenPanelOpen((open) => !open)}
+                      onClick={() => setHiddenModalOpen(true)}
                       className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-[13px] font-semibold transition ${
                         hiddenItems.length > 0
                           ? "border-[#E0B4B0] bg-[#F8EEEE] text-[#6E2A2A] hover:bg-[#F3E0DE]"
@@ -700,7 +743,7 @@ export function MenuAdminApp() {
                       }`}
                     >
                       <EyeOff className="size-3.5" />
-                      Masqués
+                      En rupture
                       <span className="rounded-full bg-white/70 px-1.5 text-[11px] tabular-nums">
                         {hiddenItems.length}
                       </span>
@@ -715,51 +758,6 @@ export function MenuAdminApp() {
                     </button>
                   </div>
                 </div>
-
-                {hiddenPanelOpen ? (
-                  <div className="mb-5 rounded-[10px] border border-[#E0B4B0] bg-[#FBF6F5] px-4 py-3.5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <p className="text-[13.5px] font-semibold text-[#6E2A2A]">
-                        Plats en rupture
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setHiddenPanelOpen(false)}
-                        className="text-[12px] font-semibold text-[#6b6a5f] hover:text-[#1E3A2F]"
-                      >
-                        Fermer
-                      </button>
-                    </div>
-                    {hiddenItems.length === 0 ? (
-                      <p className="text-sm text-[#6b6a5f]">
-                        Aucun plat masqué pour le moment.
-                      </p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {hiddenItems.map(({ item, categoryName }) => (
-                          <li
-                            key={item.id}
-                            className="flex min-w-0 items-center justify-between gap-3 rounded-md bg-white px-3 py-2"
-                          >
-                            <div className="min-w-0">
-                              <p className="truncate font-[family-name:var(--font-cormorant)] text-[17px] font-semibold">
-                                <DishTitle name={item.name} emoji={item.emoji} />
-                              </p>
-                              <p className="text-[12px] text-[#8a8578]">{categoryName}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => void toggleHidden(item)}
-                              className="shrink-0 rounded-md border border-[#D9CFB8] bg-[#FBF8F1] px-2.5 py-1.5 text-[12px] font-semibold text-[#1E3A2F] hover:bg-white"
-                            >
-                              Remettre
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ) : null}
 
                 {!selectedCategory || selectedCategory.items.length === 0 ? (
                   <div className="rounded-[10px] border border-dashed border-[#D9CFB8] px-8 py-10 text-center text-[#6b6a5f]">
@@ -799,7 +797,7 @@ export function MenuAdminApp() {
           <div
             className={`flex-1 overflow-y-auto print:hidden ${printSlices !== null ? "hidden" : ""}`}
           >
-            <DigitalMenu categories={categories} />
+            <DigitalMenu categories={categories} embedded />
           </div>
           <div
             className={
@@ -1114,6 +1112,68 @@ export function MenuAdminApp() {
         </div>
       ) : null}
 
+      {hiddenModalOpen ? (
+        <div
+          className="menu-admin-chrome fixed inset-0 z-50 flex items-center justify-center bg-[#1B1E19]/55 p-5 backdrop-blur-[2px]"
+          onClick={() => setHiddenModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-labelledby="hidden-dishes-title"
+            className="flex max-h-[min(32rem,80dvh)] w-full max-w-[440px] flex-col rounded-2xl border border-[#E8D5D0] bg-[#FBF8F1] p-5 shadow-[0_24px_60px_rgba(27,30,25,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3
+                  id="hidden-dishes-title"
+                  className="font-[family-name:var(--font-cormorant)] text-[26px] leading-tight font-semibold text-[#1B1E19]"
+                >
+                  En rupture
+                </h3>
+                <p className="mt-1 text-[13px] text-[#6b6a5f]">
+                  {hiddenItems.length === 0
+                    ? "Aucun plat en rupture pour le moment."
+                    : `${hiddenItems.length} plat${hiddenItems.length > 1 ? "s" : ""} retiré${hiddenItems.length > 1 ? "s" : ""} temporairement.`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHiddenModalOpen(false)}
+                className="rounded-md p-1.5 text-[#8a8578] hover:bg-white hover:text-[#1E3A2F]"
+                aria-label="Fermer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            {hiddenItems.length > 0 ? (
+              <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-0.5">
+                {hiddenItems.map(({ item, categoryName }) => (
+                  <li
+                    key={item.id}
+                    className="flex min-w-0 items-center justify-between gap-3 rounded-[10px] border border-[#E0B4B0] bg-white px-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-[family-name:var(--font-cormorant)] text-[18px] font-semibold">
+                        <DishTitle name={item.name} emoji={item.emoji} />
+                      </p>
+                      <p className="text-[12px] text-[#8a8578]">{categoryName}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void toggleHidden(item)}
+                      className="shrink-0 rounded-md border border-[#D9CFB8] bg-[#FBF8F1] px-2.5 py-1.5 text-[12px] font-semibold text-[#1E3A2F] hover:bg-white"
+                    >
+                      Remettre
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {pendingDelete ? (
         <div
           className="menu-admin-chrome fixed inset-0 z-[60] flex items-center justify-center bg-[#1B1E19]/60 p-5 backdrop-blur-[2px]"
@@ -1258,13 +1318,13 @@ function SortableMenuItem({
           onClick={onToggleHidden}
           className={`mr-auto inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[12px] font-semibold transition ${
             item.isHidden
-              ? "border-[#E0B4B0] bg-white text-[#6E2A2A]"
-              : "border-[#D9CFB8] bg-[#FBF8F1] text-[#1E3A2F]"
+              ? "border-[#D8B871]/80 bg-[#FBF8F1] text-[#8F6A24]"
+              : "border-[#1E3A2F]/25 bg-[#F4F1EA] text-[#1E3A2F]"
           }`}
         >
           <span
             className={`relative h-4 w-7 rounded-full transition ${
-              item.isHidden ? "bg-[#6E2A2A]" : "bg-[#B68A3D]"
+              item.isHidden ? "bg-[#B68A3D]" : "bg-[#1E3A2F]"
             }`}
           >
             <span
@@ -1273,7 +1333,7 @@ function SortableMenuItem({
               }`}
             />
           </span>
-          {item.isHidden ? "Masqué" : "Sur la carte"}
+          {item.isHidden ? "En rupture" : "Sur la carte"}
         </button>
         <button
           type="button"
