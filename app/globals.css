@@ -147,7 +147,7 @@
   display: block;
   width: min(36rem, 96%);
   height: auto;
-  margin: 0 auto 0.35rem;
+  margin: 0 auto 1.35rem;
 }
 
 .menu-cover-name {
@@ -170,11 +170,16 @@
 
 .menu-note {
   box-sizing: border-box;
+  width: 92%;
+  max-width: 34rem;
+  margin: 0.85rem auto 0.15rem;
   padding: 0.7rem 0.9rem;
   border: 1px solid #e6d3a4;
   border-radius: 0.7rem;
   background: #fbf6e8;
   color: #3d382c;
+  break-inside: avoid;
+  page-break-inside: avoid;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -275,6 +280,9 @@
 }
 
 .menu-note--print {
+  width: 82%;
+  max-width: 148mm;
+  margin: 4.5mm auto 1.5mm;
   padding: 5px 8px;
   border-radius: 6px;
 }
@@ -312,7 +320,7 @@
 .menu-sheet--measure .menu-cover-logo {
   width: 78%;
   max-width: 172mm;
-  margin-bottom: 1.5mm;
+  margin-bottom: 7mm;
 }
 
 .menu-sheet--measure .menu-cover-name {
@@ -453,7 +461,7 @@
   .menu-cover-logo {
     width: 78%;
     max-width: 172mm;
-    margin-bottom: 1.5mm;
+    margin-bottom: 7mm;
   }
 
   .menu-cover-name {
@@ -482,8 +490,13 @@
   }
 
   .menu-note {
+    width: 82% !important;
+    max-width: 148mm !important;
+    margin: 4.5mm auto 1.5mm !important;
     break-inside: avoid;
     page-break-inside: avoid;
+    break-before: avoid;
+    page-break-before: avoid;
   }
 
   .dish-mark {

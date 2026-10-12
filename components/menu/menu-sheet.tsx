@@ -192,8 +192,6 @@ function MenuCover() {
         alt=""
         className="menu-cover-logo"
       />
-      <p className="menu-cover-name">La Félicità</p>
-      <p className="menu-cover-tag">Furdenheim — Cuisine italienne</p>
 
       <div className="menu-cover-frame">
         {COVER_PARAGRAPHS.map((paragraph) => (

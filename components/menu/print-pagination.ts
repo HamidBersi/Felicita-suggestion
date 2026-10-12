@@ -201,16 +201,30 @@ export function slicePrintPagesFromDom(
       ),
     ];
     const gap = 8;
+    const noteTopGap = 16;
     const orphanMin = 2;
+
+    function blockPackHeight(el: HTMLElement): number {
+      const extra = el.dataset.noteId ? noteTopGap : 0;
+      return el.offsetHeight + gap + extra;
+    }
 
     function packHeight(fromIndex: number, count: number): number {
       let height = titleHeight;
       for (let offset = 0; offset < count; offset += 1) {
         const el = blockEls[fromIndex + offset];
         if (!el) break;
-        height += el.offsetHeight + gap;
+        height += blockPackHeight(el);
       }
       return height;
+    }
+
+    function pruneEmptySections() {
+      while (sections.length > 0) {
+        const last = sections[sections.length - 1];
+        if (last.items.length > 0 || (last.notes?.length ?? 0) > 0) break;
+        sections.pop();
+      }
     }
 
     let startedOnThisPage = false;
@@ -220,7 +234,7 @@ export function slicePrintPagesFromDom(
       const item = itemsById.get(block.dataset.itemId ?? "");
       const note = notesById.get(block.dataset.noteId ?? "");
       if (!item && !note) continue;
-      const blockHeight = block.offsetHeight + gap;
+      const blockHeight = blockPackHeight(block);
       const remaining = blockEls.length - index;
 
       if (
@@ -237,6 +251,33 @@ export function slicePrintPagesFromDom(
       const addHeight = (needHeading ? titleHeight : 0) + blockHeight;
 
       if (used > 0 && used + addHeight > pageHeightPx) {
+        if (note) {
+          const lastSection = [...sections]
+            .reverse()
+            .find((section) => section.items.length > 0);
+          const lastItem = lastSection?.items[lastSection.items.length - 1];
+          if (lastItem && lastSection) {
+            const prevEl = categoryEl.querySelector<HTMLElement>(
+              `[data-item-id="${lastItem.id}"]`,
+            );
+            const companionHeight = prevEl ? blockPackHeight(prevEl) : 0;
+            if (titleHeight + companionHeight + blockHeight <= pageHeightPx) {
+              lastSection.items.pop();
+              pruneEmptySections();
+              flush();
+              sections.push({
+                categoryId,
+                categoryName,
+                continuation: true,
+                items: [lastItem],
+                notes: [note],
+              });
+              used = titleHeight + companionHeight + blockHeight;
+              startedOnThisPage = true;
+              continue;
+            }
+          }
+        }
         flush();
         startedOnThisPage = false;
       }
