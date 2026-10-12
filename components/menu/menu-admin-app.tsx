@@ -37,7 +37,20 @@ import {
   familyIdForCategoryName,
 } from "@/components/menu/menu-family-bar";
 import { MenuSheet } from "@/components/menu/menu-sheet";
-import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import type {
+  MenuCategoryDto,
+  MenuItemDto,
+  MenuNoteColor,
+  MenuNoteDto,
+  MenuNoteLineDto,
+} from "@/components/menu/menu-types";
+import { orderedCategoryEntries } from "@/components/menu/menu-types";
+import { MenuNoteCard } from "@/components/menu/menu-note-card";
+import {
+  DEFAULT_NOTE_COLOR,
+  NOTE_COLORS,
+  noteHasContent,
+} from "@/lib/menu-note";
 import type { MenuFamilyId } from "@/components/menu/menu-groups";
 import {
   loadLastPrintHashes,
@@ -110,6 +123,14 @@ export function MenuAdminApp() {
   const [deleting, setDeleting] = useState(false);
   const [reordering, setReordering] = useState(false);
   const [hiddenModalOpen, setHiddenModalOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState<{
+    id: string | null;
+    title: string;
+    body: string;
+    color: MenuNoteColor;
+    lines: MenuNoteLineDto[];
+  } | null>(null);
+  const [savingNote, setSavingNote] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -189,6 +210,10 @@ export function MenuAdminApp() {
     () => categories.find((category) => category.id === selectedCategoryId) ?? null,
     [categories, selectedCategoryId],
   );
+  const selectedEntries = useMemo(
+    () => (selectedCategory ? orderedCategoryEntries(selectedCategory, false) : []),
+    [selectedCategory],
+  );
   const familyReadyRef = useRef(false);
 
   useEffect(() => {
@@ -256,25 +281,34 @@ export function MenuAdminApp() {
     if (found) setSelectedCategoryId(found.id);
   }
 
-  async function handleItemsDragEnd(event: DragEndEvent) {
+  async function handleEntriesDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id || !selectedCategory || reordering) return;
 
-    const items = selectedCategory.items;
-    const oldIndex = items.findIndex((item) => item.id === active.id);
-    const newIndex = items.findIndex((item) => item.id === over.id);
+    const entries = orderedCategoryEntries(selectedCategory, false);
+    const oldIndex = entries.findIndex((entry) => entry.id === active.id);
+    const newIndex = entries.findIndex((entry) => entry.id === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
 
     const previous = categories;
-    const reordered = arrayMove(items, oldIndex, newIndex).map((item, index) => ({
-      ...item,
-      position: index,
-    }));
+    const reordered = arrayMove(entries, oldIndex, newIndex);
+    const items = reordered
+      .filter((entry) => entry.kind === "item")
+      .map((entry) => ({
+        ...entry.item,
+        position: reordered.findIndex((row) => row.id === entry.id),
+      }));
+    const notes = reordered
+      .filter((entry) => entry.kind === "note")
+      .map((entry) => ({
+        ...entry.note,
+        position: reordered.findIndex((row) => row.id === entry.id),
+      }));
 
     setCategories((current) =>
       current.map((category) =>
         category.id === selectedCategory.id
-          ? { ...category, items: reordered }
+          ? { ...category, items, notes }
           : category,
       ),
     );
@@ -286,7 +320,7 @@ export function MenuAdminApp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categoryId: selectedCategory.id,
-          orderedIds: reordered.map((item) => item.id),
+          orderedIds: reordered.map((entry) => entry.id),
         }),
       });
       if (!response.ok) {
@@ -422,6 +456,96 @@ export function MenuAdminApp() {
       toast.error("Erreur réseau.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function openNoteCreate() {
+    if (!selectedCategoryId) {
+      toast.error("Choisissez une catégorie.");
+      return;
+    }
+    setNoteDraft({
+      id: null,
+      title: "",
+      body: "",
+      color: DEFAULT_NOTE_COLOR,
+      lines: [{ name: "", price: "" }],
+    });
+  }
+
+  function openNoteEdit(note: MenuNoteDto) {
+    setNoteDraft({
+      id: note.id,
+      title: note.title ?? "",
+      body: note.body ?? "",
+      color: note.color ?? DEFAULT_NOTE_COLOR,
+      lines: note.lines?.length ? note.lines : [{ name: "", price: "" }],
+    });
+  }
+
+  async function saveNote() {
+    if (!selectedCategoryId || !noteDraft || savingNote) return;
+    const lines = noteDraft.lines.filter((line) => line.name.trim());
+    if (!noteHasContent({ title: noteDraft.title, body: noteDraft.body, lines })) {
+      toast.error("Ajoutez un titre, un commentaire ou un supplément.");
+      return;
+    }
+    setSavingNote(true);
+    try {
+      const payload = {
+        title: noteDraft.title.trim(),
+        body: noteDraft.body.trim(),
+        color: noteDraft.color,
+        lines,
+      };
+      const response = noteDraft.id
+        ? await fetch(`/api/menu/notes/${noteDraft.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/menu/notes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              categoryId: selectedCategoryId,
+              ...payload,
+            }),
+          });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        toast.error(data?.error ?? "Impossible d’enregistrer l’encadré.");
+        return;
+      }
+      toast.success(noteDraft.id ? "Encadré mis à jour" : "Encadré ajouté");
+      setNoteDraft(null);
+      await loadMenu();
+    } catch {
+      toast.error("Erreur réseau.");
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function deleteNote(note: MenuNoteDto) {
+    try {
+      const response = await fetch(`/api/menu/notes/${note.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        toast.error("Suppression impossible.");
+        return;
+      }
+      if (noteDraft?.id === note.id) setNoteDraft(null);
+      toast.success("Encadré retiré");
+      await loadMenu();
+    } catch {
+      toast.error("Erreur réseau.");
     }
   }
 
@@ -750,6 +874,14 @@ export function MenuAdminApp() {
                     </button>
                     <button
                       type="button"
+                      onClick={openNoteCreate}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-[#D8B871]/80 bg-white px-3 py-2 text-[13px] font-semibold text-[#8F6A24] hover:bg-[#FBF6E8]"
+                    >
+                      <Plus className="size-3.5" />
+                      Encadré
+                    </button>
+                    <button
+                      type="button"
                       onClick={openCreate}
                       className="inline-flex items-center gap-1.5 rounded-md bg-[#B68A3D] px-4 py-2.5 text-[13.5px] font-semibold text-[#1E3A2F] transition hover:bg-[#D8B871]"
                     >
@@ -759,34 +891,44 @@ export function MenuAdminApp() {
                   </div>
                 </div>
 
-                {!selectedCategory || selectedCategory.items.length === 0 ? (
-                  <div className="rounded-[10px] border border-dashed border-[#D9CFB8] px-8 py-10 text-center text-[#6b6a5f]">
-                    Aucun plat dans cette catégorie pour l&apos;instant.
-                  </div>
-                ) : (
+                {selectedEntries.length > 0 ? (
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
-                    onDragEnd={handleItemsDragEnd}
+                    onDragEnd={handleEntriesDragEnd}
                   >
                     <SortableContext
-                      items={selectedCategory.items.map((item) => item.id)}
+                      items={selectedEntries.map((entry) => entry.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-3">
-                        {selectedCategory.items.map((item) => (
-                          <SortableMenuItem
-                            key={item.id}
-                            item={item}
-                            disabled={reordering}
-                            onEdit={() => openEdit(item)}
-                            onDelete={() => setPendingDelete(item)}
-                            onToggleHidden={() => void toggleHidden(item)}
-                          />
-                        ))}
+                        {selectedEntries.map((entry) =>
+                          entry.kind === "note" ? (
+                            <SortableMenuNote
+                              key={entry.note.id}
+                              note={entry.note}
+                              disabled={reordering}
+                              onEdit={() => openNoteEdit(entry.note)}
+                              onDelete={() => void deleteNote(entry.note)}
+                            />
+                          ) : (
+                            <SortableMenuItem
+                              key={entry.item.id}
+                              item={entry.item}
+                              disabled={reordering}
+                              onEdit={() => openEdit(entry.item)}
+                              onDelete={() => setPendingDelete(entry.item)}
+                              onToggleHidden={() => void toggleHidden(entry.item)}
+                            />
+                          ),
+                        )}
                       </div>
                     </SortableContext>
                   </DndContext>
+                ) : (
+                  <div className="rounded-[10px] border border-dashed border-[#D9CFB8] px-8 py-10 text-center text-[#6b6a5f]">
+                    Aucun plat dans cette catégorie pour l&apos;instant.
+                  </div>
                 )}
               </div>
             )}
@@ -965,6 +1107,173 @@ export function MenuAdminApp() {
                 className="rounded-md bg-[#1E3A2F] px-4 py-2 text-[13.5px] font-semibold text-[#FBF8F1] hover:bg-[#2C5142] disabled:opacity-60"
               >
                 {saving ? "Enregistrement…" : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {noteDraft ? (
+        <div className="menu-admin-chrome fixed inset-0 z-50 flex items-center justify-center bg-[#1B1E19]/55 p-5">
+          <div className="max-h-[90vh] w-full max-w-[460px] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-1 font-[family-name:var(--font-cormorant)] text-[23px]">
+              {noteDraft.id ? "Modifier l’encadré" : "Nouvel encadré"}
+            </h3>
+            <p className="mb-4 text-[12.5px] text-[#6b6a5f]">
+              Titre + suppléments, ou seulement un commentaire centré.
+            </p>
+            <div className="space-y-3.5">
+              <label className="block">
+                <span className="mb-1 block text-[12.5px] font-semibold text-[#6b6a5f]">
+                  Titre
+                </span>
+                <Input
+                  value={noteDraft.title}
+                  onChange={(event) =>
+                    setNoteDraft({ ...noteDraft, title: event.target.value })
+                  }
+                  placeholder="Ex. Suppléments"
+                  maxLength={40}
+                  className="border-[#D9CFB8] bg-[#FBF8F1]"
+                />
+              </label>
+              <div>
+                <p className="mb-1.5 text-[12.5px] font-semibold text-[#6b6a5f]">
+                  Couleur
+                </p>
+                <div className="flex gap-2">
+                  {NOTE_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNoteDraft({ ...noteDraft, color })}
+                      aria-pressed={noteDraft.color === color}
+                      aria-label={
+                        color === "gold"
+                          ? "Doré"
+                          : color === "green"
+                            ? "Vert"
+                            : "Orange"
+                      }
+                      className={`size-8 rounded-full border-2 transition ${
+                        color === "gold"
+                          ? "bg-[#F4E4B8] border-[#B68A3D]"
+                          : color === "green"
+                            ? "bg-[#1E3A2F] border-[#1E3A2F]"
+                            : "bg-[#E56A45] border-[#E56A45]"
+                      } ${
+                        noteDraft.color === color
+                          ? "ring-2 ring-[#1B1E19]/25 ring-offset-2"
+                          : "opacity-70 hover:opacity-100"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="text-[12.5px] font-semibold text-[#6b6a5f]">
+                    Suppléments
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setNoteDraft({
+                        ...noteDraft,
+                        lines: [...noteDraft.lines, { name: "", price: "" }],
+                      })
+                    }
+                    className="text-[12px] font-semibold text-[#8F6A24]"
+                  >
+                    + Ajouter
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {noteDraft.lines.map((line, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={line.name}
+                        onChange={(event) =>
+                          setNoteDraft({
+                            ...noteDraft,
+                            lines: noteDraft.lines.map((current, lineIndex) =>
+                              lineIndex === index
+                                ? { ...current, name: event.target.value }
+                                : current,
+                            ),
+                          })
+                        }
+                        placeholder="Burrata"
+                        className="border-[#D9CFB8] bg-[#FBF8F1]"
+                      />
+                      <Input
+                        value={line.price}
+                        onChange={(event) =>
+                          setNoteDraft({
+                            ...noteDraft,
+                            lines: noteDraft.lines.map((current, lineIndex) =>
+                              lineIndex === index
+                                ? {
+                                    ...current,
+                                    price: sanitizePriceInput(event.target.value),
+                                  }
+                                : current,
+                            ),
+                          })
+                        }
+                        placeholder="7,50"
+                        className="w-[96px] shrink-0 border-[#D9CFB8] bg-[#FBF8F1]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNoteDraft({
+                            ...noteDraft,
+                            lines: noteDraft.lines.filter(
+                              (_, lineIndex) => lineIndex !== index,
+                            ),
+                          })
+                        }
+                        className="text-[#6E2A2A]"
+                        aria-label="Retirer la ligne"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <label className="block">
+                <span className="mb-1 block text-[12.5px] font-semibold text-[#6b6a5f]">
+                  Commentaire
+                </span>
+                <Textarea
+                  value={noteDraft.body}
+                  onChange={(event) =>
+                    setNoteDraft({ ...noteDraft, body: event.target.value })
+                  }
+                  placeholder="Si seul, il sera centré dans le cadre."
+                  maxLength={180}
+                  rows={2}
+                  className="min-h-[64px] border-[#D9CFB8] bg-[#FBF8F1]"
+                />
+              </label>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setNoteDraft(null)}
+                className="rounded-md border border-[#D9CFB8] px-4 py-2 text-[13.5px]"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={savingNote}
+                onClick={() => void saveNote()}
+                className="rounded-md bg-[#1E3A2F] px-4 py-2 text-[13.5px] font-semibold text-[#FBF8F1] disabled:opacity-60"
+              >
+                {savingNote ? "…" : "Enregistrer"}
               </button>
             </div>
           </div>
@@ -1351,6 +1660,69 @@ function SortableMenuItem({
         </button>
       </div>
     </article>
+  );
+}
+
+function SortableMenuNote({
+  note,
+  disabled,
+  onEdit,
+  onDelete,
+}: {
+  note: MenuNoteDto;
+  disabled?: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: note.id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-start gap-2">
+      <button
+        type="button"
+        className="mt-2 flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md border border-[#D9CFB8] bg-white text-[#8a8578] hover:text-[#8F6A24] active:cursor-grabbing disabled:opacity-50"
+        aria-label="Déplacer l’encadré"
+        disabled={disabled}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-3.5" />
+      </button>
+      <div className="min-w-0 flex-1">
+        <MenuNoteCard note={note} />
+      </div>
+      <div className="flex shrink-0 gap-0.5 pt-1">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="flex size-8 items-center justify-center rounded-md text-[#8F6A24] hover:bg-white"
+          aria-label="Modifier l’encadré"
+        >
+          <Pencil className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          className="flex size-8 items-center justify-center rounded-md text-[#6E2A2A] hover:bg-white"
+          aria-label="Supprimer l’encadré"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }
 

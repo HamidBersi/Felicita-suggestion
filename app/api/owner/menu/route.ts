@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/require-owner";
+import { serializeNote } from "@/lib/menu-note";
 
 const MENU_TYPES = new Set(["salle", "emporter"]);
 
@@ -15,15 +16,22 @@ export async function GET(request: Request) {
   const categories = await prisma.menuCategory.findMany({
     where: { menuType },
     orderBy: { position: "asc" },
-    include: {
-      items: {
-        where: { isAvailable: true },
-        orderBy: { position: "asc" },
+      include: {
+        items: {
+          where: { isAvailable: true },
+          orderBy: { position: "asc" },
+        },
+        notes: { orderBy: { position: "asc" } },
       },
-    },
   });
 
-  return NextResponse.json(categories, {
-    headers: { "Cache-Control": "no-store" },
-  });
+  return NextResponse.json(
+    categories.map((category) => ({
+      ...category,
+      notes: category.notes.map(serializeNote),
+    })),
+    {
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }

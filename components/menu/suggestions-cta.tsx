@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { ChevronRight, Sparkles } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { tUi, type MenuLocale } from "@/components/menu/i18n";
 
@@ -63,16 +64,26 @@ export function SuggestionsTopBanner({ locale }: { locale: MenuLocale }) {
   return (
     <Link
       href={SUGGESTIONS_DISPLAY_HREF}
-      className="flex items-center justify-between gap-3 rounded-xl border border-[#E4DFD4] bg-white/70 px-4 py-3 transition hover:border-[#D8B871] hover:bg-white"
+      className="flex items-center justify-between gap-3 rounded-2xl border border-[#D8B871] bg-[#FFFBF2] px-4 py-3 shadow-[0_6px_18px_rgba(143,106,36,0.12)] transition hover:border-[#C4921A] hover:bg-white active:scale-[0.99]"
     >
-      <div className="min-w-0">
-        <p className="font-[family-name:var(--font-cormorant)] text-[18px] leading-none font-semibold text-[#1E3A2F]">
-          {ui.suggestionsCardTitle}
-        </p>
-        <p className="mt-1 text-[12.5px] text-[#8a8578]">{ui.suggestionsCardSubtitle}</p>
-      </div>
-      <span className="shrink-0 text-[#8F6A24]" aria-hidden>
-        <ChevronIcon />
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#1E3A2F] text-[#D8B871]">
+          <Sparkles className="size-4" strokeWidth={2.2} aria-hidden />
+        </span>
+        <span className="min-w-0">
+          <span className="block font-[family-name:var(--font-cormorant)] text-[18px] leading-none font-semibold text-[#1E3A2F]">
+            {ui.suggestionsCardTitle}
+          </span>
+          <span className="mt-1.5 block text-[12.5px] leading-snug text-[#8F6A24]">
+            {ui.suggestionsCardSubtitle}
+          </span>
+        </span>
+      </span>
+      <span
+        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#D8B871] text-[#1E3A2F]"
+        aria-hidden
+      >
+        <ChevronRight className="size-4" strokeWidth={2.5} />
       </span>
     </Link>
   );
@@ -95,7 +106,7 @@ export function SuggestionsFishCard({ locale }: { locale: MenuLocale }) {
         className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#D8B871] text-[#1E3A2F]"
         aria-hidden
       >
-        <ChevronIcon />
+        <ChevronRight className="size-4" strokeWidth={2.4} />
       </span>
     </Link>
   );
@@ -112,40 +123,35 @@ export function SuggestionsStickyCta({
   hidden?: boolean;
 }) {
   const ui = tUi(locale);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    let lastY = window.scrollY;
-    function onScroll() {
-      const y = window.scrollY;
-      const goingDown = y > lastY;
-      setVisible(y < 48 || !goingDown);
-      lastY = y;
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   if (hidden) return null;
 
   return (
-    <div
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1.35rem,calc(env(safe-area-inset-bottom)+0.75rem))] transition duration-300 ${
-        visible ? "translate-y-0 opacity-100" : "translate-y-[120%] opacity-0"
-      }`}
-    >
-      <div className="pointer-events-auto w-full max-w-2xl">
-        <Link
-          href={SUGGESTIONS_DISPLAY_HREF}
-          className="mx-auto flex w-[min(100%,22rem)] items-center justify-center gap-1.5 rounded-full border border-[#D8B871]/50 bg-gradient-to-br from-[#1E3A2F] via-[#244A3A] to-[#8F6A24] px-5 py-3 text-center text-[13.5px] font-semibold text-[#FBF8F1] shadow-[0_8px_22px_rgba(30,58,47,0.22)] transition hover:brightness-105"
-        >
-          {ui.suggestionsCta}
-          <span aria-hidden className="text-[#D8B871]">
-            →
+    <StickyCtaShell>
+      <Link
+        href={SUGGESTIONS_DISPLAY_HREF}
+        className="flex items-center justify-between gap-3 rounded-2xl border-2 border-[#D8B871] bg-gradient-to-r from-[#1E3A2F] via-[#244A3A] to-[#8F6A24] px-4 py-3.5 shadow-[0_14px_36px_rgba(30,58,47,0.38)] transition hover:brightness-105 active:scale-[0.99]"
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#D8B871] text-[#1E3A2F] shadow-[0_0_0_4px_rgba(216,184,113,0.28)]">
+            <Sparkles className="size-5" strokeWidth={2.2} aria-hidden />
           </span>
-        </Link>
-      </div>
-    </div>
+          <span className="min-w-0 text-left">
+            <span className="block font-[family-name:var(--font-cormorant)] text-[19px] leading-none font-semibold text-[#FBF8F1]">
+              {ui.suggestionsCardTitle}
+            </span>
+            <span className="mt-1.5 block text-[12.5px] leading-snug text-[#F4EBD8]">
+              {ui.suggestionsCta}
+            </span>
+          </span>
+        </span>
+        <span
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#FBF8F1] text-[#1E3A2F]"
+          aria-hidden
+        >
+          <ChevronRight className="size-5" strokeWidth={2.5} />
+        </span>
+      </Link>
+    </StickyCtaShell>
   );
 }
 
@@ -159,53 +165,34 @@ export function MenuStickyCta({
   href?: string;
 }) {
   const ui = tUi(locale);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    let lastY = window.scrollY;
-    function onScroll() {
-      const y = window.scrollY;
-      const goingDown = y > lastY;
-      setVisible(y < 48 || !goingDown);
-      lastY = y;
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   if (hidden) return null;
 
   return (
-    <div
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1.35rem,calc(env(safe-area-inset-bottom)+0.75rem))] transition duration-300 ${
-        visible ? "translate-y-0 opacity-100" : "translate-y-[120%] opacity-0"
-      }`}
-    >
-      <div className="pointer-events-auto w-full max-w-2xl">
-        <Link
-          href={href}
-          className="mx-auto flex w-[min(100%,22rem)] items-center justify-center gap-1.5 rounded-full border border-[#D8B871]/50 bg-gradient-to-br from-[#1E3A2F] via-[#244A3A] to-[#8F6A24] px-5 py-3 text-center text-[13.5px] font-semibold text-[#FBF8F1] shadow-[0_8px_22px_rgba(30,58,47,0.22)] transition hover:brightness-105"
+    <StickyCtaShell>
+      <Link
+        href={href}
+        className="flex items-center justify-center gap-2.5 rounded-2xl border-2 border-[#D8B871] bg-gradient-to-r from-[#1E3A2F] via-[#244A3A] to-[#8F6A24] px-5 py-3.5 text-[15px] font-semibold text-[#FBF8F1] shadow-[0_14px_36px_rgba(30,58,47,0.38)] transition hover:brightness-105 active:scale-[0.99]"
+      >
+        <span
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FBF8F1] text-[#1E3A2F]"
+          aria-hidden
         >
-          <span aria-hidden className="text-[#D8B871]">
-            ←
-          </span>
-          {ui.menuCta}
-        </Link>
-      </div>
-    </div>
+          <ChevronRight className="size-4 rotate-180" strokeWidth={2.5} />
+        </span>
+        {ui.menuCta}
+      </Link>
+    </StickyCtaShell>
   );
 }
 
-function ChevronIcon() {
+function StickyCtaShell({ children }: { children: ReactNode }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M6 3.5L10.5 8L6 12.5"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
+      <div className="bg-gradient-to-t from-[#F4F1EA] from-40% via-[#F4F1EA]/90 to-transparent pt-10">
+        <div className="mx-auto flex w-full max-w-2xl justify-center px-4 pb-[max(1.6rem,calc(env(safe-area-inset-bottom)+0.95rem))]">
+          <div className="pointer-events-auto w-full">{children}</div>
+        </div>
+      </div>
+    </div>
   );
 }

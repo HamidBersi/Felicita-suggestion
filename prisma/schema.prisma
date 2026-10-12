@@ -27,8 +27,28 @@ model MenuCategory {
   /** "salle" | "emporter" — deux cartes distinctes, même schéma */
   menuType String     @default("salle")
   items    MenuItem[]
+  notes    MenuNote[]
 
   @@index([menuType])
+}
+
+/** Encadré éditorial (supplément, mention) — séparé des plats. */
+model MenuNote {
+  id         String       @id @default(cuid())
+  title      String?
+  /** Commentaire libre. Si seul (pas de titre ni de lignes), il est centré. */
+  body       String       @default("")
+  /** "gold" | "green" | "orange" */
+  color      String       @default("gold")
+  /** [{ name, price }] */
+  lines      Json         @default("[]")
+  position   Int
+  categoryId String
+  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([categoryId])
 }
 
 model MenuItem {

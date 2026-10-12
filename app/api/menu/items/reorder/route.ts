@@ -8,7 +8,7 @@ type ReorderBody = {
 };
 
 /**
- * Réordonne les plats d’une catégorie (position = index dans orderedIds).
+ * Réordonne plats et encadrés d’une catégorie (position = index).
  */
 export async function PATCH(request: Request) {
   const denied = await requireOwner();
@@ -34,30 +34,30 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "orderedIds obligatoire." }, { status: 400 });
   }
 
-  const category = await prisma.menuCategory.findUnique({
-    where: { id: categoryId },
-    select: { id: true },
-  });
-  if (!category) {
-    return NextResponse.json({ error: "Catégorie introuvable." }, { status: 404 });
-  }
+  const [items, notes] = await Promise.all([
+    prisma.menuItem.findMany({
+      where: { categoryId },
+      select: { id: true },
+    }),
+    prisma.menuNote.findMany({
+      where: { categoryId },
+      select: { id: true },
+    }),
+  ]);
+  const itemIds = new Set(items.map((item) => item.id));
+  const noteIds = new Set(notes.map((note) => note.id));
+  const expected = new Set([...itemIds, ...noteIds]);
 
-  const items = await prisma.menuItem.findMany({
-    where: { categoryId },
-    select: { id: true },
-  });
-  const existingIds = new Set(items.map((item) => item.id));
-
-  if (orderedIds.length !== existingIds.size) {
+  if (orderedIds.length !== expected.size) {
     return NextResponse.json(
-      { error: "La liste ne correspond pas aux plats de la catégorie." },
+      { error: "La liste ne correspond pas aux plats et encadrés." },
       { status: 400 },
     );
   }
   for (const id of orderedIds) {
-    if (!existingIds.has(id)) {
+    if (!expected.has(id)) {
       return NextResponse.json(
-        { error: "Un plat n’appartient pas à cette catégorie." },
+        { error: "Un élément n’appartient pas à cette catégorie." },
         { status: 400 },
       );
     }
@@ -65,10 +65,9 @@ export async function PATCH(request: Request) {
 
   await prisma.$transaction(
     orderedIds.map((id, index) =>
-      prisma.menuItem.update({
-        where: { id },
-        data: { position: index },
-      }),
+      itemIds.has(id)
+        ? prisma.menuItem.update({ where: { id }, data: { position: index } })
+        : prisma.menuNote.update({ where: { id }, data: { position: index } }),
     ),
   );
 

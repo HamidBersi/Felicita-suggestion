@@ -1,6 +1,13 @@
+import type { ReactNode } from "react";
+
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
-import { isListedOnMenu, isOutOfStock } from "@/components/menu/menu-types";
+import {
+  isListedOnMenu,
+  isOutOfStock,
+  orderedCategoryEntries,
+} from "@/components/menu/menu-types";
 import { DishTitle } from "@/components/menu/dish-title";
+import { MenuNoteCard } from "@/components/menu/menu-note-card";
 import type { PrintPageSlice } from "@/components/menu/print-pagination";
 import {
   formatEuro,
@@ -129,28 +136,50 @@ function CategoryBlock({
   category: MenuCategoryDto;
   continuation?: boolean;
 }) {
-  const wineItems = category.items.filter((item) => hasWineTiers(item));
-  const otherItems = category.items.filter((item) => !hasWineTiers(item));
-  const asWineTable = wineItems.length > 0 && otherItems.length === 0;
+  const entries = orderedCategoryEntries(category);
+  const wineChunk: MenuItemDto[] = [];
+  const nodes: ReactNode[] = [];
+
+  function flushWine() {
+    if (wineChunk.length === 0) return;
+    const allWine = wineChunk.every((item) => hasWineTiers(item));
+    if (allWine) {
+      nodes.push(<WineTable key={`wine-${wineChunk[0]?.id}`} items={[...wineChunk]} />);
+    } else {
+      for (const item of wineChunk) {
+        nodes.push(<DishBlock key={item.id} item={item} />);
+      }
+    }
+    wineChunk.length = 0;
+  }
+
+  for (const entry of entries) {
+    if (entry.kind === "note") {
+      flushWine();
+      nodes.push(
+        <MenuNoteCard key={entry.note.id} note={entry.note} compact />,
+      );
+      continue;
+    }
+    if (hasWineTiers(entry.item)) {
+      wineChunk.push(entry.item);
+      continue;
+    }
+    flushWine();
+    nodes.push(<DishBlock key={entry.item.id} item={entry.item} />);
+  }
+  flushWine();
 
   return (
     <section className="menu-cat" data-category-id={category.id}>
-      <h2 className="menu-cat-title mb-3 flex items-center gap-3 font-[family-name:var(--font-cormorant)] text-[28px] font-bold italic leading-none text-[#8F6A24]">
+      <h2 className="menu-cat-title mb-3 flex items-center gap-3 font-[family-name:var(--font-cormorant)] text-[32px] font-bold italic leading-none text-[#8F6A24]">
         <span>
           {category.name}
         </span>
         <span className="h-px flex-1 bg-[#D9CFB8]" aria-hidden />
       </h2>
 
-      {asWineTable ? (
-        <WineTable items={wineItems} />
-      ) : (
-        <div className="space-y-1.5 print:space-y-1.5">
-          {category.items.map((item) => (
-            <DishBlock key={item.id} item={item} />
-          ))}
-        </div>
-      )}
+      <div className="space-y-1.5 print:space-y-1.5">{nodes}</div>
     </section>
   );
 }
@@ -160,9 +189,11 @@ function MenuCover() {
     <section className="menu-cover">
       <img
         src="/felicita-logo.jpg"
-        alt="Felicità"
+        alt=""
         className="menu-cover-logo"
       />
+      <p className="menu-cover-name">La Félicità</p>
+      <p className="menu-cover-tag">Furdenheim — Cuisine italienne</p>
 
       <div className="menu-cover-frame">
         {COVER_PARAGRAPHS.map((paragraph) => (
@@ -208,6 +239,7 @@ export function MenuSheet({
                       name: section.categoryName,
                       position: 0,
                       items: section.items,
+                      notes: section.notes,
                     }}
                   />
                 ))}

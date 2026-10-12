@@ -289,7 +289,7 @@ export default function DisplayPage() {
 
         {fromMenu ? <MenuStickyCta locale={locale} href={menuHref} /> : null}
 
-        <footer className={`shrink-0 pt-2.5 pb-1 ${fromMenu ? "pb-16" : ""}`}>
+        <footer className={`shrink-0 pt-2.5 pb-1 ${fromMenu ? "pb-20" : ""}`}>
           {hasOverflow ? (
             <p className="mb-1.5 text-center text-[clamp(0.65rem,1.25vh,0.75rem)] font-medium text-[#C4921A]">
               Autres suggestions disponibles auprès de votre serveur

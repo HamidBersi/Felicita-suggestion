@@ -17,6 +17,8 @@ import {
 import { MenuFamilyBar } from "@/components/menu/menu-family-bar";
 import { DishTitle } from "@/components/menu/dish-title";
 import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import { orderedCategoryEntries } from "@/components/menu/menu-types";
+import { MenuNoteCard } from "@/components/menu/menu-note-card";
 import { isListedOnMenu, isOutOfStock } from "@/components/menu/menu-types";
 import {
   formatEuro,
@@ -141,7 +143,7 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
   }
 
   return (
-    <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-24">
+    <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-40">
       <div className="sticky top-0 z-30 min-w-0 bg-[#F4F1EA]/95 backdrop-blur-sm">
         <MenuTopNav
           locale={locale}
@@ -164,7 +166,9 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
         {visibleSections.length === 0 ? (
           <p className="text-center text-sm text-[#6b675c]">{ui.emptyCategory}</p>
         ) : (
-          visibleSections.map(({ category, family }) => (
+          visibleSections.map(({ category, family }) => {
+            const entries = orderedCategoryEntries(category);
+            return (
             <section key={category.id}>
               <div className="mb-4 flex min-w-0 items-baseline justify-between gap-3">
                 <h2 className="min-w-0 flex-1 font-[family-name:var(--font-cormorant)] text-[28px] leading-none font-bold italic text-[#8F6A24]">
@@ -176,9 +180,13 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
               </div>
 
               <div className="space-y-5">
-                {category.items.map((item) => (
-                  <DishRow key={item.id} item={item} locale={locale} />
-                ))}
+                {entries.map((entry) =>
+                  entry.kind === "note" ? (
+                    <MenuNoteCard key={entry.note.id} note={entry.note} />
+                  ) : (
+                    <DishRow key={entry.item.id} item={entry.item} locale={locale} />
+                  ),
+                )}
               </div>
 
               {isFishCategory(category.name) ? (
@@ -187,14 +195,12 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
                 </div>
               ) : null}
             </section>
-          ))
+            );
+          })
         )}
       </div>
 
-      <SuggestionsStickyCta
-        locale={locale}
-        hidden={subCategoryName === "Nos poissons"}
-      />
+      <SuggestionsStickyCta locale={locale} hidden={embedded} />
     </div>
   );
 }

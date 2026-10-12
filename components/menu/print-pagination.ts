@@ -1,4 +1,8 @@
-import type { MenuCategoryDto, MenuItemDto } from "@/components/menu/menu-types";
+import type {
+  MenuCategoryDto,
+  MenuItemDto,
+  MenuNoteDto,
+} from "@/components/menu/menu-types";
 import { isListedOnMenu } from "@/components/menu/menu-types";
 
 export type PrintPageSection = {
@@ -6,6 +10,7 @@ export type PrintPageSection = {
   categoryName: string;
   continuation: boolean;
   items: MenuItemDto[];
+  notes?: MenuNoteDto[];
 };
 
 export type PrintPageSlice = {
@@ -17,12 +22,16 @@ export type PrintPageSlice = {
 const HASH_STORAGE_KEY = "felicita-menu-print-page-hashes";
 
 export function hashPrintSlice(slice: PrintPageSlice): string {
-  if (slice.isCover) return "cover:v1";
+  if (slice.isCover) return "cover:v2-logo";
   return slice.sections
     .map((section) =>
       [
         section.categoryId,
         section.continuation ? "cont" : "start",
+        ...(section.notes ?? []).map(
+          (note) =>
+            `note:${note.id}:${note.title ?? ""}:${note.body}:${note.color ?? ""}:${JSON.stringify(note.lines ?? [])}:${note.position}`,
+        ),
         ...section.items.map((item) =>
           [
             item.id,
@@ -148,7 +157,9 @@ export function slicePrintPagesFromDom(
   categories: MenuCategoryDto[],
 ): PrintPageSlice[] {
   const itemsById = new Map<string, MenuItemDto>();
+  const notesByCategory = new Map<string, MenuNoteDto[]>();
   for (const category of categories) {
+    notesByCategory.set(category.id, category.notes ?? []);
     for (const item of category.items) {
       itemsById.set(item.id, item);
     }
@@ -180,16 +191,20 @@ export function slicePrintPagesFromDom(
       "";
     const titleEl = categoryEl.querySelector<HTMLElement>(".menu-cat-title");
     const thead = categoryEl.querySelector<HTMLElement>(".wine-table thead");
-    const headingHeight =
+    const titleHeight =
       (titleEl?.offsetHeight ?? 0) + (thead?.offsetHeight ?? 0) + 12;
+    const categoryNotes = notesByCategory.get(categoryId) ?? [];
+    const notesById = new Map(categoryNotes.map((note) => [note.id, note]));
     const blockEls = [
-      ...categoryEl.querySelectorAll<HTMLElement>("[data-item-id]"),
+      ...categoryEl.querySelectorAll<HTMLElement>(
+        "[data-item-id], [data-note-id]",
+      ),
     ];
     const gap = 8;
     const orphanMin = 2;
 
     function packHeight(fromIndex: number, count: number): number {
-      let height = headingHeight;
+      let height = titleHeight;
       for (let offset = 0; offset < count; offset += 1) {
         const el = blockEls[fromIndex + offset];
         if (!el) break;
@@ -203,7 +218,8 @@ export function slicePrintPagesFromDom(
     for (let index = 0; index < blockEls.length; index += 1) {
       const block = blockEls[index];
       const item = itemsById.get(block.dataset.itemId ?? "");
-      if (!item) continue;
+      const note = notesById.get(block.dataset.noteId ?? "");
+      if (!item && !note) continue;
       const blockHeight = block.offsetHeight + gap;
       const remaining = blockEls.length - index;
 
@@ -218,7 +234,7 @@ export function slicePrintPagesFromDom(
       }
 
       const needHeading = !startedOnThisPage;
-      const addHeight = (needHeading ? headingHeight : 0) + blockHeight;
+      const addHeight = (needHeading ? titleHeight : 0) + blockHeight;
 
       if (used > 0 && used + addHeight > pageHeightPx) {
         flush();
@@ -231,12 +247,15 @@ export function slicePrintPagesFromDom(
           categoryName,
           continuation: index > 0,
           items: [],
+          notes: [],
         });
-        used += headingHeight;
+        used += titleHeight;
         startedOnThisPage = true;
       }
 
-      sections[sections.length - 1]?.items.push(item);
+      const current = sections[sections.length - 1];
+      if (item) current?.items.push(item);
+      if (note) current?.notes?.push(note);
       used += blockHeight;
     }
 
