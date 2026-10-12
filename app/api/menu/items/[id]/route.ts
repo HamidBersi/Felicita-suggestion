@@ -15,6 +15,7 @@ type UpdateItemBody = {
   imageUrl?: string | null;
   isAvailable?: boolean;
   isHidden?: boolean;
+  categoryId?: string;
   priceVerre?: string | null;
   priceQuart?: string | null;
   priceDemi?: string | null;
@@ -47,6 +48,8 @@ export async function PATCH(request: Request, context: RouteContext) {
     imageUrl?: string | null;
     isAvailable?: boolean;
     isHidden?: boolean;
+    categoryId?: string;
+    position?: number;
     priceVerre?: string | null;
     priceQuart?: string | null;
     priceDemi?: string | null;
@@ -114,9 +117,25 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (typeof input.isAvailable === "boolean") {
     data.isAvailable = input.isAvailable;
-    if (input.isAvailable === false) {
-      data.isHidden = false;
+    data.isHidden = false;
+  }
+
+  if (typeof input.categoryId === "string") {
+    const nextCategoryId = input.categoryId.trim();
+    const nextCategory = await prisma.menuCategory.findUnique({
+      where: { id: nextCategoryId },
+      select: { id: true },
+    });
+    if (!nextCategory) {
+      return NextResponse.json({ error: "Catégorie introuvable." }, { status: 404 });
     }
+    const last = await prisma.menuItem.findFirst({
+      where: { categoryId: nextCategoryId },
+      select: { position: true },
+      orderBy: { position: "desc" },
+    });
+    data.categoryId = nextCategoryId;
+    data.position = (last?.position ?? -1) + 1;
   }
 
   if (typeof input.isHidden === "boolean") {
@@ -149,7 +168,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    await prisma.menuItem.delete({ where: { id } });
+    await prisma.menuItem.update({
+      where: { id },
+      data: { isAvailable: false, isHidden: false },
+    });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Plat introuvable." }, { status: 404 });

@@ -29,6 +29,10 @@ import {
 } from "@/lib/menu-price";
 import { DishTitle } from "@/components/menu/dish-title";
 import { DishEmojiSelect } from "@/components/menu/dish-emoji-select";
+import {
+  DishDeletedSearch,
+  type DeletedDishHit,
+} from "@/components/menu/dish-deleted-search";
 import { DISH_EMOJI_OPTIONS } from "@/lib/dish-emoji";
 import { DigitalMenu } from "@/components/menu/digital-menu";
 import {
@@ -113,6 +117,7 @@ export function MenuAdminApp() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<MenuItemDto | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [form, setForm] = useState<DishFormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -342,12 +347,14 @@ export function MenuAdminApp() {
       return;
     }
     setEditingItem(null);
+    setRestoringId(null);
     setIsCreating(true);
     setForm(emptyForm);
   }
 
   function openEdit(item: MenuItemDto) {
     setIsCreating(false);
+    setRestoringId(null);
     setEditingItem(item);
     setForm({
       name: item.name,
@@ -365,7 +372,23 @@ export function MenuAdminApp() {
   function closeForm() {
     setIsCreating(false);
     setEditingItem(null);
+    setRestoringId(null);
     setForm(emptyForm);
+  }
+
+  function applyDeletedHit(hit: DeletedDishHit) {
+    setRestoringId(hit.id);
+    setForm({
+      name: hit.name,
+      description: hit.description ?? "",
+      price: normalizeStoredPrice(hit.price) ?? hit.price,
+      imageUrl: "",
+      priceVerre: normalizeStoredPrice(hit.priceVerre ?? "") ?? "",
+      priceQuart: normalizeStoredPrice(hit.priceQuart ?? "") ?? "",
+      priceDemi: normalizeStoredPrice(hit.priceDemi ?? "") ?? "",
+      priceBouteille: normalizeStoredPrice(hit.priceBouteille ?? "") ?? "",
+      emoji: hit.emoji ?? "",
+    });
   }
 
   async function saveDish() {
@@ -430,6 +453,25 @@ export function MenuAdminApp() {
           return;
         }
         toast.success("Plat mis à jour");
+      } else if (restoringId) {
+        const response = await fetch(`/api/menu/items/${restoringId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            ...payload,
+            categoryId: selectedCategoryId,
+            isAvailable: true,
+          }),
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          toast.error(data?.error ?? "Impossible de rétablir ce plat.");
+          return;
+        }
+        toast.success("Plat rétabli");
       } else {
         const response = await fetch("/api/menu/items", {
           method: "POST",
@@ -968,24 +1010,46 @@ export function MenuAdminApp() {
                 <span className="mb-1.5 block text-[12.5px] font-semibold text-[#6b6a5f]">
                   {isWineForm ? "Nom du vin" : "Nom du plat"}
                 </span>
-                <div className="relative">
-                  <Input
-                    value={form.name}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, name: event.target.value }))
-                    }
-                    placeholder="Ex. Filet de bar rôti"
-                    className={`border-[#D9CFB8] bg-[#FBF8F1] pr-12 ${
-                      form.emoji ? "pl-10" : ""
-                    }`}
-                  />
-                  <DishEmojiSelect
-                    value={form.emoji}
-                    onChange={(emoji) =>
-                      setForm((current) => ({ ...current, emoji }))
-                    }
-                  />
-                </div>
+                <DishDeletedSearch
+                  query={form.name}
+                  categoryId={selectedCategoryId}
+                  enabled={isCreating}
+                  onSelect={applyDeletedHit}
+                >
+                  <div className="relative">
+                    <Input
+                      value={form.name}
+                      onChange={(event) => {
+                        setRestoringId(null);
+                        setForm((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }));
+                      }}
+                      placeholder="Ex. Filet de bar rôti"
+                      autoComplete="off"
+                      className={`border-[#D9CFB8] bg-[#FBF8F1] pr-12 ${
+                        form.emoji ? "pl-10" : ""
+                      }`}
+                    />
+                    <DishEmojiSelect
+                      value={form.emoji}
+                      onChange={(emoji) =>
+                        setForm((current) => ({ ...current, emoji }))
+                      }
+                    />
+                  </div>
+                </DishDeletedSearch>
+                {isCreating && !restoringId ? (
+                  <p className="mt-1 text-[11px] leading-snug text-[#8a8578]">
+                    Tapez quelques lettres pour retrouver un plat déjà retiré.
+                  </p>
+                ) : null}
+                {restoringId ? (
+                  <p className="mt-1 text-[11px] font-medium text-[#1E3A2F]">
+                    Plat retiré — il sera rétabli à l’enregistrement.
+                  </p>
+                ) : null}
               </label>
 
               <label className="block">
