@@ -712,23 +712,18 @@ export function MenuAdminApp() {
     <div className="menu-admin-root flex min-h-dvh flex-1 flex-col bg-[#F7F2E7] text-[#1B1E19]">
       <header className="menu-admin-chrome shrink-0 bg-[#1E3A2F] text-[#FBF8F1]">
         <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-3">
             <img
               src="/felicita-logo.jpg"
-              alt=""
-              width={40}
-              height={40}
+              alt="La Félicità"
+              width={120}
+              height={88}
               draggable={false}
-              className="size-10 rounded-full object-cover"
+              className="h-9 w-auto max-w-[9.5rem] object-contain brightness-110"
             />
-            <div className="min-w-0 leading-tight">
-              <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] tracking-wide">
-                La Félicità
-              </p>
-              <p className="text-[11px] font-medium tracking-wide text-[#D8B871]">
-                espace admin
-              </p>
-            </div>
+            <p className="min-w-0 text-[11px] font-medium tracking-[0.16em] text-[#D8B871] uppercase">
+              espace admin
+            </p>
           </div>
 
           <div className="ml-auto hidden items-center gap-1.5 md:flex">
