@@ -189,7 +189,7 @@ function MenuCover() {
     <section className="menu-cover">
       <img
         src="/felicita-logo.jpg"
-        alt=""
+        alt="La Félicità"
         className="menu-cover-logo"
       />
 
