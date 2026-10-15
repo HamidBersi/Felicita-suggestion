@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { noteHasContent, serializeNote } from "@/lib/menu-note";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/require-owner";
 
@@ -36,16 +37,20 @@ export async function PATCH(request: Request) {
 
   const [items, notes] = await Promise.all([
     prisma.menuItem.findMany({
-      where: { categoryId },
+      where: { categoryId, isAvailable: true },
       select: { id: true },
     }),
     prisma.menuNote.findMany({
       where: { categoryId },
-      select: { id: true },
     }),
   ]);
   const itemIds = new Set(items.map((item) => item.id));
-  const noteIds = new Set(notes.map((note) => note.id));
+  const noteIds = new Set(
+    notes
+      .map(serializeNote)
+      .filter((note) => noteHasContent(note))
+      .map((note) => note.id),
+  );
   const expected = new Set([...itemIds, ...noteIds]);
 
   if (orderedIds.length !== expected.size) {

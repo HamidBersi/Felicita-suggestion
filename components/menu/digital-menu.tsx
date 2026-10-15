@@ -30,10 +30,7 @@ import {
   storeMenuLocale,
 } from "@/components/menu/menu-top-nav";
 import {
-  SuggestionsFishCard,
-  SuggestionsStickyCta,
   fishDescriptionWithoutBoardHint,
-  isFishCategory,
   isFishOfTheDay,
 } from "@/components/menu/suggestions-cta";
 
@@ -143,7 +140,7 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
   }
 
   return (
-    <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-40">
+    <div className="mx-auto min-h-full w-full min-w-0 max-w-2xl pb-24">
       <div className="sticky top-0 z-30 min-w-0 bg-[#F4F1EA]/95 backdrop-blur-sm">
         <MenuTopNav
           locale={locale}
@@ -188,19 +185,11 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
                   ),
                 )}
               </div>
-
-              {isFishCategory(category.name) ? (
-                <div className="mt-14 sm:mt-16">
-                  <SuggestionsFishCard locale={locale} />
-                </div>
-              ) : null}
             </section>
             );
           })
         )}
       </div>
-
-      <SuggestionsStickyCta locale={locale} hidden={embedded} />
     </div>
   );
 }

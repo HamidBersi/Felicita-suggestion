@@ -323,6 +323,7 @@ export function MenuAdminApp() {
       const response = await fetch("/api/menu/items/reorder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           categoryId: selectedCategory.id,
           orderedIds: reordered.map((entry) => entry.id),
