@@ -12,6 +12,7 @@ type UiStrings = {
   wineBottle: string;
   loadError: string;
   soldOut: string;
+  onRequest: string;
   suggestionsCta: string;
   menuCta: string;
   suggestionsHint: string;
@@ -35,6 +36,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineBottle: "Bouteille",
     loadError: "Impossible de charger le menu.",
     soldOut: "En rupture",
+    onRequest: "Sur demande",
     suggestionsCta: "Découvrez nos suggestions du jour",
     menuCta: "Retour au menu",
     suggestionsHint: "Aussi : suggestions du jour →",
@@ -60,6 +62,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineBottle: "Bottle",
     loadError: "Unable to load the menu.",
     soldOut: "Sold out",
+    onRequest: "On request",
     suggestionsCta: "Discover today’s specials",
     menuCta: "Back to the menu",
     suggestionsHint: "Also: today’s specials →",
@@ -85,6 +88,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineBottle: "Flasche",
     loadError: "Menü konnte nicht geladen werden.",
     soldOut: "Ausverkauft",
+    onRequest: "Auf Anfrage",
     suggestionsCta: "Entdecken Sie die Tagesempfehlungen",
     menuCta: "Zurück zur Speisekarte",
     suggestionsHint: "Auch: Tagesempfehlungen →",
@@ -110,6 +114,7 @@ export const UI: Record<MenuLocale, UiStrings> = {
     wineBottle: "Bottiglia",
     loadError: "Impossibile caricare il menu.",
     soldOut: "Esaurito",
+    onRequest: "Su richiesta",
     suggestionsCta: "Scoprite i suggerimenti del giorno",
     menuCta: "Torna al menu",
     suggestionsHint: "Anche: suggerimenti del giorno →",
