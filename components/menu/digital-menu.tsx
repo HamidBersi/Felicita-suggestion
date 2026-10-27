@@ -39,7 +39,10 @@ type DigitalMenuProps = {
   embedded?: boolean;
 };
 
-function formatMenuPrice(price: string): string {
+function formatMenuPrice(price: string, locale: MenuLocale): string {
+  if (/^sur\s+demande$/i.test(price.trim())) {
+    return tUi(locale).onRequest;
+  }
   return formatEuro(price);
 }
 
@@ -294,7 +297,7 @@ function DishRow({ item, locale }: { item: MenuItemDto; locale: MenuLocale }) {
           <SoldOutMark label={tUi(locale).soldOut} />
         ) : (
           <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[#1B1E19]">
-            {formatMenuPrice(item.price)}
+            {formatMenuPrice(item.price, locale)}
           </span>
         )}
       </div>
