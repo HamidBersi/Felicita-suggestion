@@ -919,3 +919,152 @@ ${entries.join(",\n")}
 
 writeFileSync("./components/menu/i18n/items.ts", out);
 console.log("Wrote", entries.length, "entries");
+
+/** Descriptions partagées + ajouts admin (vins, glaces, plats hors seed). */
+const EXTRA_DESCS: Record<string, Record<Loc, string>> = {
+  "Burrata fondante enveloppée d'une pâte à pizza croustillante, garnie de pesto de basilic et de jambon blanc fumé, servie avec une salade verte et ses crudités":
+    {
+      en: "Melting burrata wrapped in crisp pizza dough, topped with basil pesto and smoked cooked ham, served with green salad and crudités",
+      de: "Schmelzende Burrata in knusprigem Pizzateig, mit Basilikumpesto und geräuchertem Kochschinken, serviert mit grünem Salat und Rohkost",
+      it: "Burrata fondente avvolta in pasta per pizza croccante, guarnita con pesto di basilico e prosciutto cotto affumicato, servita con insalata verde e crudités",
+    },
+  "Ballotine façon cordon bleu au taleggio et jambon blanc , sauce à la crème et aux champignons.":
+    {
+      en: "Cordon bleu–style poultry ballotine with Taleggio and cooked ham, cream and mushroom sauce",
+      de: "Geflügel-Ballotine nach Cordon-bleu-Art mit Taleggio und Kochschinken, Sahne-Champignon-Sauce",
+      it: "Ballotine di pollame stile cordon bleu con taleggio e prosciutto cotto, salsa alla panna e funghi",
+    },
+  "Sauce tomate, spianata, oignons rouges, olives, fiore di latte": {
+    en: "Tomato sauce, spianata, red onions, olives, fiore di latte",
+    de: "Tomatensauce, Spianata, rote Zwiebeln, Oliven, Fiore di Latte",
+    it: "Salsa di pomodoro, spianata, cipolle rosse, olive, fiore di latte",
+  },
+  "15 minutes d’attente, servie avec sa boule de glace vanille": {
+    en: "15 minutes waiting time, served with a scoop of vanilla ice cream",
+    de: "15 Minuten Wartezeit, serviert mit einer Kugel Vanilleeis",
+    it: "15 minuti di attesa, servito con una pallina di gelato alla vaniglia",
+  },
+  "15 minutes d'attente, servie avec sa boule de glace vanille": {
+    en: "15 minutes waiting time, served with a scoop of vanilla ice cream",
+    de: "15 Minuten Wartezeit, serviert mit einer Kugel Vanilleeis",
+    it: "15 minuti di attesa, servito con una pallina di gelato alla vaniglia",
+  },
+  "Vanille, Chocolat, Café, Pistache, Caramel Beurre-Salé, Stracciatella, Noisette, Yaourt, Coco, Citron, Framboise, Fraise, Passion, Melon, Mangue":
+    {
+      en: "Vanilla, Chocolate, Coffee, Pistachio, Salted-butter caramel, Stracciatella, Hazelnut, Yogurt, Coconut, Lemon, Raspberry, Strawberry, Passion fruit, Melon, Mango",
+      de: "Vanille, Schokolade, Kaffee, Pistazie, Salzbutterkaramell, Stracciatella, Haselnuss, Joghurt, Kokos, Zitrone, Himbeere, Erdbeere, Maracuja, Melone, Mango",
+      it: "Vaniglia, Cioccolato, Caffè, Pistacchio, Caramello al burro salato, Stracciatella, Nocciola, Yogurt, Cocco, Limone, Lampone, Fragola, Frutto della passione, Melone, Mango",
+    },
+  "Provenance des Abruzzes": {
+    en: "From Abruzzo",
+    de: "Herkunft Abruzzen",
+    it: "Provenienza Abruzzo",
+  },
+  "Provenance des Marches Italie": {
+    en: "From the Marche, Italy",
+    de: "Herkunft Marken, Italien",
+    it: "Provenienza Marche, Italia",
+  },
+  "Provenance de Sicile": {
+    en: "From Sicily",
+    de: "Herkunft Sizilien",
+    it: "Provenienza Sicilia",
+  },
+  "Provenance Emile-Romagne": {
+    en: "From Emilia-Romagna",
+    de: "Herkunft Emilia-Romagna",
+    it: "Provenienza Emilia-Romagna",
+  },
+  "Provenance Marlenheim": {
+    en: "From Marlenheim",
+    de: "Herkunft Marlenheim",
+    it: "Provenienza Marlenheim",
+  },
+  "Provenance des Pouilles": {
+    en: "From Puglia",
+    de: "Herkunft Apulien",
+    it: "Provenienza Puglia",
+  },
+  "Provenance de latium": {
+    en: "From Lazio",
+    de: "Herkunft Latium",
+    it: "Provenienza Lazio",
+  },
+  "Provenance de Latium": {
+    en: "From Lazio",
+    de: "Herkunft Latium",
+    it: "Provenienza Lazio",
+  },
+  "Provenance des Pouilles/Abruzzes": {
+    en: "From Puglia/Abruzzo",
+    de: "Herkunft Apulien/Abruzzen",
+    it: "Provenienza Puglia/Abruzzo",
+  },
+  "Provenance du nord de l’italie": {
+    en: "From northern Italy",
+    de: "Herkunft Norditalien",
+    it: "Provenienza Nord Italia",
+  },
+  "Provenance du nord de l'italie": {
+    en: "From northern Italy",
+    de: "Herkunft Norditalien",
+    it: "Provenienza Nord Italia",
+  },
+  "Provenance de Calabre": {
+    en: "From Calabria",
+    de: "Herkunft Kalabrien",
+    it: "Provenienza Calabria",
+  },
+  "Provenance de Marches": {
+    en: "From the Marche",
+    de: "Herkunft Marken",
+    it: "Provenienza Marche",
+  },
+  "Provenance de Toscane": {
+    en: "From Tuscany",
+    de: "Herkunft Toskana",
+    it: "Provenienza Toscana",
+  },
+  "Provenance  de Vénétie": {
+    en: "From Veneto",
+    de: "Herkunft Venetien",
+    it: "Provenienza Veneto",
+  },
+  "Provenance de Vénétie": {
+    en: "From Veneto",
+    de: "Herkunft Venetien",
+    it: "Provenienza Veneto",
+  },
+  "Provenance du Piémont": {
+    en: "From Piedmont",
+    de: "Herkunft Piemont",
+    it: "Provenienza Piemonte",
+  },
+  "Côtes de Provence": {
+    en: "Côtes de Provence",
+    de: "Côtes de Provence",
+    it: "Coste di Provenza",
+  },
+};
+
+const allDescs = { ...DESCS, ...EXTRA_DESCS };
+const descEntries = Object.entries(allDescs)
+  .sort(([a], [b]) => a.localeCompare(b, "fr"))
+  .map(
+    ([fr, locs]) =>
+      `  ${JSON.stringify(fr)}: {\n    en: ${JSON.stringify(locs.en)},\n    de: ${JSON.stringify(locs.de)},\n    it: ${JSON.stringify(locs.it)},\n  }`,
+  );
+
+const descOut = `import type { MenuLocale } from "@/components/menu/i18n/locale";
+
+/** Traductions par texte FR exact de description / ingrédients. */
+export const DESCRIPTION_TRANSLATIONS: Record<
+  string,
+  Partial<Record<Exclude<MenuLocale, "fr">, string>>
+> = {
+${descEntries.join(",\n")}
+};
+`;
+
+writeFileSync("./components/menu/i18n/descriptions.ts", descOut);
+console.log("Wrote", descEntries.length, "description entries");

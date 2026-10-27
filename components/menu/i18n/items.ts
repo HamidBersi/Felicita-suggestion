@@ -431,14 +431,38 @@ export const ITEM_TRANSLATIONS: Record<
     it: { name: "Caffè liègeois" },
   },
   "Coupe de glace ou sorbet 1 boule": {
-    en: { name: "Ice cream or sorbet — 1 scoop" },
-    de: { name: "Eis oder Sorbet — 1 Kugel" },
-    it: { name: "Gelato o sorbetto — 1 pallina" },
+    en: {
+      name: "Ice cream or sorbet — 1 scoop",
+      description:
+        "Vanilla, Chocolate, Coffee, Pistachio, Salted-butter caramel, Stracciatella, Hazelnut, Yogurt, Coconut, Lemon, Raspberry, Strawberry, Passion fruit, Melon, Mango",
+    },
+    de: {
+      name: "Eis oder Sorbet — 1 Kugel",
+      description:
+        "Vanille, Schokolade, Kaffee, Pistazie, Salzbutterkaramell, Stracciatella, Haselnuss, Joghurt, Kokos, Zitrone, Himbeere, Erdbeere, Maracuja, Melone, Mango",
+    },
+    it: {
+      name: "Gelato o sorbetto — 1 pallina",
+      description:
+        "Vaniglia, Cioccolato, Caffè, Pistacchio, Caramello al burro salato, Stracciatella, Nocciola, Yogurt, Cocco, Limone, Lampone, Fragola, Frutto della passione, Melone, Mango",
+    },
   },
   "Coupe 2 boules": {
-    en: { name: "2 scoops" },
-    de: { name: "2 Kugeln" },
-    it: { name: "2 palline" },
+    en: {
+      name: "2 scoops",
+      description:
+        "Vanilla, Chocolate, Coffee, Pistachio, Salted-butter caramel, Stracciatella, Hazelnut, Yogurt, Coconut, Lemon, Raspberry, Strawberry, Passion fruit, Melon, Mango",
+    },
+    de: {
+      name: "2 Kugeln",
+      description:
+        "Vanille, Schokolade, Kaffee, Pistazie, Salzbutterkaramell, Stracciatella, Haselnuss, Joghurt, Kokos, Zitrone, Himbeere, Erdbeere, Maracuja, Melone, Mango",
+    },
+    it: {
+      name: "2 palline",
+      description:
+        "Vaniglia, Cioccolato, Caffè, Pistacchio, Caramello al burro salato, Stracciatella, Nocciola, Yogurt, Cocco, Limone, Lampone, Fragola, Frutto della passione, Melone, Mango",
+    },
   },
   "Affogato": {
     en: { description: "Whipped cream extra €1" },
@@ -587,5 +611,149 @@ export const ITEM_TRANSLATIONS: Record<
     en: { name: "Organic Prosecco" },
     de: { name: "Bio-Prosecco" },
     it: { name: "Prosecco biologico" },
-  }
+  },
+  "Crousti Burrata": {
+    en: {
+      name: "Crispy Burrata",
+      description:
+        "Melting burrata wrapped in crisp pizza dough, topped with basil pesto and smoked cooked ham, served with green salad and crudités",
+    },
+    de: {
+      name: "Knusprige Burrata",
+      description:
+        "Schmelzende Burrata in knusprigem Pizzateig, mit Basilikumpesto und geräuchertem Kochschinken, serviert mit grünem Salat und Rohkost",
+    },
+    it: {
+      name: "Crousti Burrata",
+      description:
+        "Burrata fondente avvolta in pasta per pizza croccante, guarnita con pesto di basilico e prosciutto cotto affumicato, servita con insalata verde e crudités",
+    },
+  },
+  "Ballotine de volaille": {
+    en: {
+      name: "Poultry ballotine",
+      description:
+        "Cordon bleu–style poultry ballotine with Taleggio and cooked ham, cream and mushroom sauce",
+    },
+    de: {
+      name: "Geflügel-Ballotine",
+      description:
+        "Geflügel-Ballotine nach Cordon-bleu-Art mit Taleggio und Kochschinken, Sahne-Champignon-Sauce",
+    },
+    it: {
+      name: "Ballotine di pollame",
+      description:
+        "Ballotine di pollame stile cordon bleu con taleggio e prosciutto cotto, salsa alla panna e funghi",
+    },
+  },
+  "Fettuccine alla crema e pancetta": {
+    en: { description: "Smoked bacon lardons, cream, egg yolk, Parmesan" },
+    de: { description: "Geräucherter Speck, Sahne, Eigelb, Parmesan" },
+    it: {
+      description: "Pancetta affumicata, panna, tuorlo d'uovo, parmigiano",
+    },
+  },
+  "Fettuccine al pesto": {
+    en: { description: "Fresh pesto, pine nuts, garlic" },
+    de: { description: "Frisches Pesto, Pinienkerne, Knoblauch" },
+    it: { description: "Pesto fresco, pinoli, aglio" },
+  },
+  "Fettuccine alle vongole": {
+    en: {
+      description:
+        "Shellfish stock, shelled cockles, clams, fresh herbs, lemon oil",
+    },
+    de: {
+      description:
+        "Krustentierfond, ausgelöste Herzmuscheln, Venusmuscheln, frische Kräuter, Zitronenöl",
+    },
+    it: {
+      description:
+        "Fumetto di crostacei, cannolicchi sgusciati, vongole, erbe fresche, olio al limone",
+    },
+  },
+  "Fettuccine ai frutti di mare": {
+    en: {
+      description:
+        "Tomatoes, shellfish stock, mussels, squid, prawns, garlic, fresh herbs, lemon oil",
+    },
+    de: {
+      description:
+        "Tomaten, Krustentierfond, Miesmuscheln, Calamari, Gambas, Knoblauch, frische Kräuter, Zitronenöl",
+    },
+    it: {
+      description:
+        "Pomodori, fumetto di crostacei, cozze, calamari, gamberi, aglio, erbe fresche, olio al limone",
+    },
+  },
+  "Fettuccine al salmone": {
+    en: {
+      description:
+        "Fresh salmon, courgettes, carrots, onions, cream, garlic, lemon juice",
+    },
+    de: {
+      description:
+        "Frischer Lachs, Zucchini, Karotten, Zwiebeln, Crème fraîche, Knoblauch, Zitronensaft",
+    },
+    it: {
+      description:
+        "Salmone fresco, zucchine, carote, cipolle, panna fresca, aglio, succo di limone",
+    },
+  },
+  Spianata: {
+    en: {
+      description:
+        "Tomato sauce, spianata, red onions, olives, fiore di latte",
+    },
+    de: {
+      description:
+        "Tomatensauce, Spianata, rote Zwiebeln, Oliven, Fiore di Latte",
+    },
+    it: {
+      description:
+        "Salsa di pomodoro, spianata, cipolle rosse, olive, fiore di latte",
+    },
+  },
+  "Moelleux au chocolat Maison": {
+    en: {
+      name: "Homemade chocolate fondant",
+      description:
+        "15 minutes waiting time, served with a scoop of vanilla ice cream",
+    },
+    de: {
+      name: "Hausgemachter Schokoladenkuchen",
+      description:
+        "15 Minuten Wartezeit, serviert mit einer Kugel Vanilleeis",
+    },
+    it: {
+      name: "Tortino al cioccolato della casa",
+      description:
+        "15 minuti di attesa, servito con una pallina di gelato alla vaniglia",
+    },
+  },
+  "Pinot Noir fût de chêne  Mosbach (rouge)": {
+    en: { name: "Oak-barrel Pinot Noir Mosbach (red)" },
+    de: { name: "Pinot Noir Fass Mosbach (rot)" },
+    it: { name: "Pinot Nero barrique Mosbach (rosso)" },
+  },
+  "Pinot Noir Rosé Vorlauf Mosbach (rosé)": {
+    en: { name: "Pinot Noir Rosé Vorlauf Mosbach (rosé)" },
+    de: { name: "Pinot Noir Rosé Vorlauf Mosbach (Rosé)" },
+    it: { name: "Pinot Nero Rosato Vorlauf Mosbach (rosato)" },
+  },
+  "Pinot Gris Mosbach Cuvée Particulière (blanc)": {
+    en: { name: "Pinot Gris Mosbach Special Cuvée (white)" },
+    de: { name: "Pinot Gris Mosbach Cuvée Particulière (weiß)" },
+    it: { name: "Pinot Grigio Mosbach Cuvée Particulière (bianco)" },
+  },
+  Silence: {
+    en: { name: "Silence" },
+    de: { name: "Silence" },
+    it: { name: "Silence" },
+  },
+  Prosecco: {
+    en: { name: "Prosecco" },
+    de: { name: "Prosecco" },
+    it: { name: "Prosecco" },
+  },
 };
