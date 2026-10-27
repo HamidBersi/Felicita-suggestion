@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
+import { BrandLogo } from "@/components/brand-logo";
 import {
   LOCALE_LABELS,
   MENU_LOCALES,
@@ -97,35 +97,16 @@ export function MenuTopNav({
             type="button"
             onClick={goBack}
             aria-label={ui.backLabel}
-            className="shrink-0 rounded-full transition active:scale-95 hover:opacity-90"
+            className="shrink-0 transition active:scale-[0.98] hover:opacity-90"
           >
-            <Image
-              src="/felicita-logo.jpg"
-              alt=""
-              width={52}
-              height={52}
-              className="size-[52px] rounded-full object-cover ring-1 ring-[#1B1E19]/20"
-              priority
-            />
+            <BrandLogo height={40} alt="" priority className="max-h-10" />
           </button>
         ) : (
-          <Image
-            src="/felicita-logo.jpg"
-            alt="La Félicità"
-            width={52}
-            height={52}
-            className="size-[52px] rounded-full object-cover ring-1 ring-[#1B1E19]/20"
-            priority
-          />
+          <BrandLogo height={40} priority className="max-h-10" />
         )}
-        <div className="min-w-0">
-          <p className="truncate font-[family-name:var(--font-cormorant)] text-[22px] leading-none font-semibold tracking-wide text-[#1E3A2F]">
-            La Félicità
-          </p>
-          <p className="mt-1 truncate text-[10px] font-medium tracking-[0.18em] text-[#8a8578] uppercase">
-            {ui.tagline}
-          </p>
-        </div>
+        <p className="min-w-0 truncate text-[10px] font-medium tracking-[0.18em] text-[#8a8578] uppercase sm:text-[11px]">
+          {ui.tagline}
+        </p>
       </div>
 
       <div ref={ref} className="relative shrink-0">
