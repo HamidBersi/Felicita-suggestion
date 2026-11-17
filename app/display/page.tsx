@@ -20,7 +20,7 @@ const DISPLAY_PHOTOS = [
   "/images/diaporama-suggestions/plat-4.jpeg",
   
 ];
-const TABLEAU_MS = 70_000; // remettre 70_000 en salle
+const TABLEAU_MS = 3_000; // remettre 70_000 en salle
 const PHOTO_MS = 8_000;
 const FADE_MS = 1_000;
 
@@ -270,7 +270,7 @@ export default function DisplayPage() {
   <img
     src={DISPLAY_PHOTOS[photoIndex]}
     alt=""
-    className="h-full w-full object-cover"
+    className="h-full w-full object-contain"
   />
 </div>
 
