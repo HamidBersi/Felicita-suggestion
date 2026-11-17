@@ -171,8 +171,11 @@ export function DigitalMenu({ categories, embedded = false }: DigitalMenuProps) 
             return (
             <section key={category.id}>
               <div className="mb-4 flex min-w-0 items-baseline justify-between gap-3">
-                <h2 className="min-w-0 flex-1 font-[family-name:var(--font-cormorant)] text-[28px] leading-none font-bold italic text-[#8F6A24]">
-                  {translateCategoryName(category.name, locale)}
+                <h2 className="flex min-w-0 flex-1 items-center gap-3 font-[family-name:var(--font-cormorant)] text-[28px] leading-none font-bold italic text-[#8F6A24]">
+                  <span className="min-w-0">
+                    {translateCategoryName(category.name, locale)}
+                  </span>
+                  <span className="h-px min-w-[1.5rem] flex-1 bg-[#D9CFB8]" aria-hidden />
                 </h2>
                 <span className="shrink-0 text-[13px] text-[#8a8578]">
                   {category.items.length} {countNounFor(family)}
