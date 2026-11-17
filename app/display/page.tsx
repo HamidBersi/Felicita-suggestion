@@ -13,6 +13,17 @@ import { readStoredMenuLocale } from "@/components/menu/i18n";
 
 const MAX_DISPLAYED = 8;
 
+const DISPLAY_PHOTOS = [
+  "/images/diaporama-suggestions/plat-1.jpeg",
+  "/images/diaporama-suggestions/plat-2.jpeg",
+  "/images/diaporama-suggestions/plat-3.jpeg",
+  "/images/diaporama-suggestions/plat-4.jpeg",
+  
+];
+const TABLEAU_MS = 70_000; // remettre 70_000 en salle
+const PHOTO_MS = 8_000;
+const FADE_MS = 1_000;
+
 type LabelColor = "orange" | "red" | "green";
 
 type ApiSuggestion = {
@@ -167,6 +178,8 @@ export default function DisplayPage() {
   const [fromMenu, setFromMenu] = useState(false);
   const [menuHref, setMenuHref] = useState(MENU_HREF);
   const [locale, setLocale] = useState(readStoredMenuLocale);
+  const [photoVisible, setPhotoVisible] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
 
   useEffect(() => {
     const standalone = isPwaStandalone();
@@ -199,6 +212,38 @@ export default function DisplayPage() {
     void loadSuggestionsFromApi();
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+  
+    function showBoard() {
+      if (cancelled) return;
+      setPhotoVisible(false);
+      timeoutId = setTimeout(showPhoto, TABLEAU_MS);
+    }
+  
+    function showPhoto() {
+      if (cancelled) return;
+      setPhotoVisible(true);
+      timeoutId = setTimeout(() => {
+        if (cancelled) return;
+        setPhotoVisible(false);
+        timeoutId = setTimeout(() => {
+          if (cancelled) return;
+          setPhotoIndex((i) => (i + 1) % DISPLAY_PHOTOS.length);
+          showBoard();
+        }, FADE_MS);
+      }, PHOTO_MS);
+    }
+  
+    showBoard();
+  
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
   const hasOverflow = loadState === "ready" && suggestions.length > MAX_DISPLAYED;
   const displayed = loadState === "ready" ? suggestions.slice(0, MAX_DISPLAYED) : [];
   const density = getDensity(displayed.length);
@@ -216,6 +261,18 @@ export default function DisplayPage() {
             "radial-gradient(ellipse 85% 50% at 50% -8%, rgba(224,184,74,0.36), transparent 55%), radial-gradient(ellipse 50% 35% at 0% 100%, rgba(30,92,69,0.12), transparent 45%), radial-gradient(ellipse 40% 30% at 100% 80%, rgba(229,106,69,0.1), transparent 45%)",
         }}
       />
+      <div
+  className={`absolute inset-0 z-30 bg-black transition-opacity duration-1000 ${
+    photoVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+  }`}
+  aria-hidden={!photoVisible}
+>
+  <img
+    src={DISPLAY_PHOTOS[photoIndex]}
+    alt=""
+    className="h-full w-full object-cover"
+  />
+</div>
 
       {showPwaBack ? (
         <div className="absolute left-2 top-2 z-20 sm:left-3 sm:top-3">
