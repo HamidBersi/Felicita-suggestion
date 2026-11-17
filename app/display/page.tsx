@@ -20,7 +20,7 @@ const DISPLAY_PHOTOS = [
   "/images/diaporama-suggestions/plat-4.jpeg",
   
 ];
-const TABLEAU_MS = 3_000; // remettre 70_000 en salle
+const TABLEAU_MS = 70_000; // remettre 70_000 en salle
 const PHOTO_MS = 8_000;
 const FADE_MS = 1_000;
 
@@ -180,6 +180,7 @@ export default function DisplayPage() {
   const [locale, setLocale] = useState(readStoredMenuLocale);
   const [photoVisible, setPhotoVisible] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [photoZooming, setPhotoZooming] = useState(false);
 
   useEffect(() => {
     const standalone = isPwaStandalone();
@@ -224,12 +225,14 @@ export default function DisplayPage() {
   
     function showPhoto() {
       if (cancelled) return;
+      setPhotoZooming(true);
       setPhotoVisible(true);
       timeoutId = setTimeout(() => {
         if (cancelled) return;
         setPhotoVisible(false);
         timeoutId = setTimeout(() => {
           if (cancelled) return;
+          setPhotoZooming(false);
           setPhotoIndex((i) => (i + 1) % DISPLAY_PHOTOS.length);
           showBoard();
         }, FADE_MS);
@@ -262,15 +265,23 @@ export default function DisplayPage() {
         }}
       />
       <div
-  className={`absolute inset-0 z-30 bg-black transition-opacity duration-1000 ${
+  className={`absolute inset-0 z-30 overflow-hidden bg-black transition-opacity duration-1000 ${
     photoVisible ? "opacity-100" : "opacity-0 pointer-events-none"
   }`}
   aria-hidden={!photoVisible}
 >
   <img
+    key={photoIndex}
     src={DISPLAY_PHOTOS[photoIndex]}
     alt=""
-    className="h-full w-full object-contain"
+    className="h-full w-full origin-center object-contain"
+    style={
+      photoZooming
+        ? {
+            animation: `display-photo-zoom ${PHOTO_MS + FADE_MS}ms linear forwards`,
+          }
+        : undefined
+    }
   />
 </div>
 
