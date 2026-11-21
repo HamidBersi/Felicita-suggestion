@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Félicità Suggestions
 
-## Getting Started
+**Le logiciel de gestion du menu et des suggestions du jour du restaurant La Félicità (Furdenheim, 67), utilisé en production par l'équipe et les clients.**
 
-First, run the development server:
+Avant, le menu était imprimé et les suggestions du jour étaient écrites à la main. Aujourd'hui, l'équipe modifie tout depuis un téléphone. L'écran de la salle, le menu digital consulté par QR code et la carte imprimée se mettent à jour en même temps.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+> _Témoignage client : à ajouter (citation du gérant, avec son accord)._
+
+<!-- Captures : ajouter ici 3 images (écran en salle, menu sur mobile, back-office) -->
+
+## Fonctionnalités
+
+| Pour qui | Fonctionnalité |
+| --- | --- |
+| Clients en salle | **Tableau des suggestions** affiché sur un écran : jusqu'à 8 suggestions avec étiquettes de couleur, qui alternent avec un diaporama photo des plats |
+| Clients | **Menu digital** accessible par **QR code**, traduit en **4 langues** (français, anglais, allemand, italien), langue mémorisée sur l'appareil |
+| Clients | Deux cartes distinctes : **sur place** et **à emporter** ; vins au verre, au quart, au demi ou à la bouteille ; pictos (piment, bio…) |
+| Équipe | **Back-office des suggestions** : ajout, modification, activation, ordre d'affichage |
+| Gérant | **Back-office du menu** : catégories, plats, prix, photos, encadrés (suppléments, mentions) ; réordonnancement par **glisser-déposer** |
+| Gérant | Plat marqué **« En rupture »** en un clic, sans le retirer de la carte ; recherche et restauration des plats supprimés |
+| Gérant | **Version imprimable** de la carte avec pagination automatique, et génération du QR code |
+
+## Architecture
+
+```
+Téléphone / écran salle / QR code
+            │
+            ▼
+   Next.js (App Router, React 19, TypeScript)
+   ├── Pages : /display (écran salle), /menu (menu client), /portail (back-office)
+   └── API REST : /api/suggestions, /api/menu, /api/menu/qr, /api/admin, /api/owner
+            │  Prisma ORM
+            ▼
+        PostgreSQL
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Stack :** Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui · Prisma 7 · PostgreSQL · dnd-kit · qrcode
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Exploitation et sécurité
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Deux rôles séparés** : équipe (suggestions) et gérant (menu), chacun protégé par son propre code PIN.
+- **Sessions** signées en HMAC-SHA256, stockées dans un cookie `httpOnly`, `secure` en production, `sameSite=lax`. Le PIN n'est jamais stocké côté navigateur.
+- **Anti-force brute** : blocage après 5 essais ratés par adresse IP pendant 15 minutes.
+- **Secrets** uniquement dans les variables d'environnement, jamais dans le code (voir `.env.example`).
+- **Mises en production** : le build applique automatiquement les migrations de base de données (`prisma migrate deploy`) avant de compiler l'application.
 
-## Learn More
+## Lancer le projet en local
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm install
+cp .env.example .env      # puis renseigner les valeurs
+pnpm prisma:migrate       # crée les tables
+pnpm menu:seed            # charge la carte de départ
+pnpm dev                  # http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Rôle |
+| --- | --- |
+| `DATABASE_URL` | Connexion PostgreSQL |
+| `ADMIN_PIN` | Code PIN de l'équipe (suggestions) |
+| `OWNER_PIN` | Code PIN du gérant (menu) |
+| `SESSION_SECRET` | Clé de signature des sessions (`openssl rand -hex 32`) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Auteur
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Hamid Bersi** – conception, développement, mise en production et maintenance.
