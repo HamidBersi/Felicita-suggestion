@@ -11,6 +11,7 @@ export type CatalogHit = {
   price: string;
   label: string | null;
   labelColor: string;
+  imageUrl?: string | null;
 };
 
 type TitleAutocompleteProps = {

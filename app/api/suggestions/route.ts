@@ -10,6 +10,7 @@ type SuggestionInput = {
   label?: string;
   labelColor?: string;
   position?: number;
+  imageUrl?: string | null;
 };
 
 type SuggestionCreateData = {
@@ -20,7 +21,19 @@ type SuggestionCreateData = {
   labelColor: string;
   position: number;
   isActive: true;
+  /** undefined = ne pas toucher la photo déjà en base (formulaire pas encore branché). */
+  imageUrl?: string | null;
 };
+
+function parseOptionalImageUrl(
+  value: unknown,
+): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
 
 
 
@@ -75,6 +88,7 @@ function validateSuggestionsBody(body: unknown):
       labelColor,
       position: index,
       isActive: true,
+      imageUrl: parseOptionalImageUrl(item.imageUrl),
     });
   }
 
@@ -131,12 +145,18 @@ async function upsertSuggestionByTitle(
         labelColor: item.labelColor,
         position: item.position,
         isActive: true,
+        ...(item.imageUrl !== undefined ? { imageUrl: item.imageUrl } : {}),
       },
     });
     return;
   }
 
-  await tx.suggestion.create({ data: item });
+  await tx.suggestion.create({
+    data: {
+      ...item,
+      imageUrl: item.imageUrl ?? null,
+    },
+  });
 }
 
 /** Menu du jour = actifs ; le reste du catalogue reste en BDD, inactif. */

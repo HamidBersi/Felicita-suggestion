@@ -19,13 +19,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Camera,
   Check,
   ChevronDown,
   Eye,
   GripVertical,
+  Loader2,
   LogOut,
   Monitor,
   Plus,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -46,6 +49,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { compressImageForUpload } from "@/lib/compress-image";
 
 type LabelColor = "orange" | "red" | "green";
 
@@ -58,6 +62,7 @@ type ApiSuggestion = {
   labelColor: string;
   position: number;
   isActive: boolean;
+  imageUrl?: string | null;
 };
 
 type SuggestionRow = {
@@ -67,6 +72,8 @@ type SuggestionRow = {
   price: string;
   label: string;
   labelColor: LabelColor;
+  /** URL en base, ou "" s’il n’y a pas / plus de photo. */
+  imageUrl: string;
 };
 
 function createInitialRow(): SuggestionRow {
@@ -77,6 +84,7 @@ function createInitialRow(): SuggestionRow {
     price: "",
     label: "",
     labelColor: "orange",
+    imageUrl: "",
   };
 }
 
@@ -88,6 +96,7 @@ function createEmptyRow(): SuggestionRow {
     price: "",
     label: "",
     labelColor: "orange",
+    imageUrl: "",
   };
 }
 
@@ -103,6 +112,7 @@ function apiToRow(stored: ApiSuggestion): SuggestionRow {
     price: stored.price,
     label: stored.label ?? "",
     labelColor: isLabelColor(stored.labelColor) ? stored.labelColor : "orange",
+    imageUrl: stored.imageUrl?.trim() ?? "",
   };
 }
 
@@ -215,6 +225,184 @@ const inputClass =
 const cardHeaderClass =
   "flex w-full flex-row items-center justify-between rounded-t-[10px] border-b border-[#D9CFB8] bg-[#FBF8F1] px-4 py-3";
 
+function PhotoField({
+  index,
+  imageUrl,
+  onImageUrlChange,
+}: {
+  index: number;
+  imageUrl: string;
+  onImageUrlChange: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const shown = localPreview || imageUrl;
+
+  useEffect(() => {
+    return () => {
+      if (localPreview) URL.revokeObjectURL(localPreview);
+    };
+  }, [localPreview]);
+
+  async function handleFile(file: File | undefined) {
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const preview = URL.createObjectURL(file);
+    setLocalPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return preview;
+    });
+
+    setUploading(true);
+    try {
+      const compressed = await compressImageForUpload(file);
+      const body = new FormData();
+      body.append("file", compressed);
+
+      const response = await fetch("/api/suggestions/image", {
+        method: "POST",
+        credentials: "include",
+        body,
+      });
+
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        toast.error(payload.error ?? "Impossible d’envoyer la photo");
+        return;
+      }
+
+      onImageUrlChange(payload.url);
+      setLocalPreview((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
+    } catch {
+      toast.error("Impossible d’envoyer la photo");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  function handleRemove() {
+    setLocalPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    if (inputRef.current) inputRef.current.value = "";
+    setIsLandscape(false);
+    onImageUrlChange("");
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <p className={fieldLabelClass}>
+        Photo{" "}
+        <span className="font-normal text-[#8a8578]">(optionnel)</span>
+      </p>
+      <input
+        ref={inputRef}
+        id={`photo-${index}`}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(event) => handleFile(event.target.files?.[0])}
+      />
+      <div
+        className={`relative overflow-hidden rounded-2xl transition ${
+          dragOver
+            ? "ring-2 ring-[#B68A3D] ring-offset-2 ring-offset-white"
+            : ""
+        } ${
+          shown
+            ? "border border-[#D9CFB8] bg-[#1B1E19]"
+            : "border border-dashed border-[#D9CFB8] bg-[#FBF8F1]"
+        }`}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragOver(false);
+          void handleFile(event.dataTransfer.files[0]);
+        }}
+      >
+        {shown ? (
+          <img
+            src={shown}
+            alt=""
+            className="h-44 w-full object-cover sm:h-52"
+            onLoad={(event) => {
+              const photo = event.currentTarget;
+              setIsLandscape(photo.naturalWidth > photo.naturalHeight);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="flex h-40 w-full flex-col items-center justify-center gap-3 px-4 text-center sm:h-44"
+          >
+            <span className="flex size-12 items-center justify-center rounded-full bg-white shadow-[0_8px_24px_rgba(30,58,47,0.08)] ring-1 ring-[#E0B84A]/40">
+              <Camera className="size-5 text-[#1E3A2F]" />
+            </span>
+            <span>
+              <span className="block text-[14px] font-semibold text-[#1B1E19]">
+                Ajouter une photo
+              </span>
+              <span className="mt-0.5 block text-[12px] text-[#8a8578]">
+                Cadre le plat à la verticale, comme l’écran en salle.
+                Appareil, galerie ou glisser-déposer.
+              </span>
+            </span>
+          </button>
+        )}
+
+        {shown && !uploading ? (
+          <div className="absolute inset-0 flex items-end justify-between bg-gradient-to-t from-black/55 via-black/10 to-transparent p-3">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="rounded-full bg-white/95 px-3 py-1.5 text-[12px] font-semibold text-[#1E3A2F] shadow-sm"
+            >
+              Changer
+            </button>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="flex size-8 items-center justify-center rounded-full bg-white/95 text-[#6E2A2A] shadow-sm"
+              aria-label="Retirer la photo"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        ) : null}
+
+        {isLandscape && shown && !uploading ? (
+          <p className="border-t border-[#E8D9B0] bg-[#FBF8F1] px-3 py-2 text-[12px] leading-snug text-[#8F6A24]">
+            Photo trop large : elle sera recadrée sur les côtés en salle.
+          </p>
+        ) : null}
+
+        {uploading ? (
+          <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#1B1E19]/50">
+            <Loader2 className="size-7 animate-spin text-white" />
+            <span className="text-[12px] font-medium text-white/90">
+              Envoi de la photo…
+            </span>
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 type RowCardProps = {
   row: SuggestionRow;
   index: number;
@@ -323,6 +511,12 @@ function RowCard({
             </div>
           </div>
         </div>
+
+        <PhotoField
+          index={index}
+          imageUrl={row.imageUrl}
+          onImageUrlChange={(value) => onUpdate(row.id, "imageUrl", value)}
+        />
       </CardContent>
     </Card>
   );
@@ -485,6 +679,7 @@ function AdminPanel() {
               labelColor: isLabelColor(hit.labelColor)
                 ? hit.labelColor
                 : row.labelColor,
+              imageUrl: hit.imageUrl?.trim() ?? "",
             }
           : row
       )
@@ -526,12 +721,13 @@ function AdminPanel() {
   async function handleConfirm() {
     const suggestionsPayload = suggestions
       .filter((row) => row.title.trim() !== "")
-      .map(({ title, description, price, label, labelColor }) => ({
+      .map(({ title, description, price, label, labelColor, imageUrl }) => ({
         title,
         description,
         price,
         label,
         labelColor,
+        imageUrl,
       }));
 
     try {
@@ -675,8 +871,17 @@ function AdminPanel() {
               {preview.map((row, index) => (
                 <article
                   key={`preview-${index}`}
-                  className="flex flex-col rounded-[10px] border border-[#D9CFB8] bg-white px-4 py-3.5"
+                  className="flex flex-col overflow-hidden rounded-[10px] border border-[#D9CFB8] bg-white"
                 >
+                  {row.imageUrl ? (
+                    <img
+                      src={row.imageUrl}
+                      alt=""
+                      className="h-32 w-full object-cover"
+                    />
+                  ) : null}
+
+                  <div className="flex flex-1 flex-col px-4 py-3.5">
                   {row.label.trim() ? (
                     <Badge
                       className={`mb-3 w-fit ${getLabelBadgeClass(row.labelColor)}`}
@@ -700,6 +905,7 @@ function AdminPanel() {
                       {formatPrice(row.price)}
                     </p>
                   ) : null}
+                  </div>
                 </article>
               ))}
             </div>

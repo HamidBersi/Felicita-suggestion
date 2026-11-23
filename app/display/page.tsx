@@ -12,15 +12,8 @@ import {
 import { readStoredMenuLocale } from "@/components/menu/i18n";
 
 const MAX_DISPLAYED = 8;
-
-const DISPLAY_PHOTOS = [
-  "/images/diaporama-suggestions/plat-1.jpeg",
-  "/images/diaporama-suggestions/plat-2.jpeg",
-  "/images/diaporama-suggestions/plat-3.jpeg",
-  "/images/diaporama-suggestions/plat-4.jpeg",
-  
-];
-const TABLEAU_MS = 70_000; // remettre 70_000 en salle
+const MIN_SLIDESHOW_PHOTOS = 2;
+const TABLEAU_MS = 70_000;
 const PHOTO_MS = 8_000;
 const FADE_MS = 1_000;
 
@@ -35,6 +28,7 @@ type ApiSuggestion = {
   labelColor: string;
   position: number;
   isActive: boolean;
+  imageUrl?: string | null;
 };
 
 type Suggestion = {
@@ -44,6 +38,7 @@ type Suggestion = {
   price: string;
   label: string;
   labelColor?: LabelColor;
+  imageUrl: string | null;
 };
 
 type LoadState = "loading" | "error" | "ready";
@@ -78,6 +73,7 @@ function isLabelColor(color: string): color is LabelColor {
 }
 
 function apiToSuggestion(stored: ApiSuggestion): Suggestion {
+  const imageUrl = stored.imageUrl?.trim() || null;
   return {
     id: stored.id,
     title: stored.title,
@@ -85,7 +81,15 @@ function apiToSuggestion(stored: ApiSuggestion): Suggestion {
     price: stored.price,
     label: stored.label ?? "",
     labelColor: isLabelColor(stored.labelColor) ? stored.labelColor : "orange",
+    imageUrl,
   };
+}
+
+function slideshowSlides(rows: Suggestion[]): { url: string; title: string }[] {
+  return rows
+    .slice(0, MAX_DISPLAYED)
+    .filter((row): row is Suggestion & { imageUrl: string } => Boolean(row.imageUrl))
+    .map((row) => ({ url: row.imageUrl, title: row.title }));
 }
 
 type SuggestionCardProps = {
@@ -213,16 +217,27 @@ export default function DisplayPage() {
     void loadSuggestionsFromApi();
   }, []);
 
+  const hasOverflow = loadState === "ready" && suggestions.length > MAX_DISPLAYED;
+  const displayed = loadState === "ready" ? suggestions.slice(0, MAX_DISPLAYED) : [];
+  const slidePhotos = slideshowSlides(displayed);
+
   useEffect(() => {
+    if (slidePhotos.length < MIN_SLIDESHOW_PHOTOS) {
+      setPhotoVisible(false);
+      setPhotoZooming(false);
+      return;
+    }
+
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout>;
-  
+    const count = slidePhotos.length;
+
     function showBoard() {
       if (cancelled) return;
       setPhotoVisible(false);
       timeoutId = setTimeout(showPhoto, TABLEAU_MS);
     }
-  
+
     function showPhoto() {
       if (cancelled) return;
       setPhotoZooming(true);
@@ -233,22 +248,21 @@ export default function DisplayPage() {
         timeoutId = setTimeout(() => {
           if (cancelled) return;
           setPhotoZooming(false);
-          setPhotoIndex((i) => (i + 1) % DISPLAY_PHOTOS.length);
+          setPhotoIndex((i) => (i + 1) % count);
           showBoard();
         }, FADE_MS);
       }, PHOTO_MS);
     }
-  
+
+    setPhotoIndex(0);
     showBoard();
-  
+
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [slidePhotos.map((slide) => slide.url).join("|")]);
 
-  const hasOverflow = loadState === "ready" && suggestions.length > MAX_DISPLAYED;
-  const displayed = loadState === "ready" ? suggestions.slice(0, MAX_DISPLAYED) : [];
   const density = getDensity(displayed.length);
   const isTight = density === "tight";
   const isCompact = density === "compact" || isTight;
@@ -270,19 +284,28 @@ export default function DisplayPage() {
   }`}
   aria-hidden={!photoVisible}
 >
-  <img
-    key={photoIndex}
-    src={DISPLAY_PHOTOS[photoIndex]}
-    alt=""
-    className="h-full w-full origin-center object-contain"
-    style={
-      photoZooming
-        ? {
-            animation: `display-photo-zoom ${PHOTO_MS + FADE_MS}ms linear forwards`,
-          }
-        : undefined
-    }
-  />
+  {slidePhotos[photoIndex] ? (
+    <>
+      <img
+        key={slidePhotos[photoIndex].url}
+        src={slidePhotos[photoIndex].url}
+        alt=""
+        className="h-full w-full origin-center object-cover"
+        style={
+          photoZooming
+            ? {
+                animation: `display-photo-zoom ${PHOTO_MS + FADE_MS}ms linear forwards`,
+              }
+            : undefined
+        }
+      />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-6 pb-8 pt-16 text-center">
+        <p className="font-[family-name:var(--font-cormorant)] text-[clamp(1.15rem,3.2vh,1.75rem)] font-semibold tracking-tight text-[#FBF8F1]">
+          {slidePhotos[photoIndex].title}
+        </p>
+      </div>
+    </>
+  ) : null}
 </div>
 
       {showPwaBack ? (
