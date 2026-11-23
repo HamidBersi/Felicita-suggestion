@@ -17,17 +17,19 @@ Aujourd’hui : l’équipe met à jour depuis un téléphone. L’écran en sal
 
 | Qui | Quoi |
 | --- | --- |
-| Clients en salle | Tableau des suggestions (jusqu’à 8) + diaporama photo |
+| Clients en salle | Tableau des suggestions (jusqu’à 8) + diaporama des **plats affichés** (photo facultative) |
 | Clients | Menu digital par QR, **FR / EN / DE / IT**, langue mémorisée |
 | Clients | Deux cartes : **sur place** et **à emporter** (vins, pictos, « en rupture ») |
-| Équipe | Suggestions : ajout, ordre, activation (code PIN) |
+| Équipe | Suggestions : ajout, photo (téléphone / galerie), ordre, activation (code PIN) |
 | Gérant | Carte : catégories, plats, prix, encadrés, glisser-déposer, rupture, impression, QR (autre PIN) |
 
-Les traductions du menu sont un **dictionnaire** (les plats déjà en carte). Un plat ajouté en back-office reste en français tant qu’on n’ajoute pas la traduction. Le diaporama utilise des photos **fixes**, pas les suggestions du jour.
+Les traductions du menu sont un **dictionnaire** (les plats déjà en carte). Un plat ajouté en back-office reste en français tant qu’on n’ajoute pas la traduction.
+
+Les photos des suggestions sont des fichiers sur **Vercel Blob** ; Postgres ne garde que l’URL. Sans au moins deux photos sur le tableau, pas de diaporama.
 
 ## Stack
 
-**Next.js 16** · React 19 · TypeScript · Tailwind CSS 4 · Prisma · PostgreSQL · Vercel
+**Next.js 16** · React 19 · TypeScript · Tailwind CSS 4 · Prisma · PostgreSQL · Vercel Blob
 
 Pages : `/display` (salle) · `/menu` (QR) · `/admin` (suggestions) · `/admin/menu` (gérant)
 
