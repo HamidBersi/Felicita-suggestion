@@ -13,8 +13,8 @@ import { readStoredMenuLocale } from "@/components/menu/i18n";
 
 const MAX_DISPLAYED = 8;
 const MIN_SLIDESHOW_PHOTOS = 2;
-const TABLEAU_MS = 70_000;
-const PHOTO_MS = 8_000;
+const TABLEAU_MS = 5_000;
+const PHOTO_MS = 5_000;
 const FADE_MS = 1_000;
 
 type LabelColor = "orange" | "red" | "green";
