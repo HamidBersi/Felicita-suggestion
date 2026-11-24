@@ -13,8 +13,8 @@ import { readStoredMenuLocale } from "@/components/menu/i18n";
 
 const MAX_DISPLAYED = 8;
 const MIN_SLIDESHOW_PHOTOS = 2;
-const TABLEAU_MS = 5_000;
-const PHOTO_MS = 5_000;
+const TABLEAU_MS = 15_000;
+const PHOTO_MS = 7_000;
 const FADE_MS = 1_000;
 
 type LabelColor = "orange" | "red" | "green";
@@ -299,10 +299,12 @@ export default function DisplayPage() {
             : undefined
         }
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-6 pb-8 pt-16 text-center">
-        <p className="font-[family-name:var(--font-cormorant)] text-[clamp(1.15rem,3.2vh,1.75rem)] font-semibold tracking-tight text-[#FBF8F1]">
-          {slidePhotos[photoIndex].title}
-        </p>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center px-5 pb-9">
+        <div className="max-w-[88%] rounded-full border border-white/25 bg-[#163D2E]/55 px-5 py-2.5 shadow-[0_10px_28px_rgba(0,0,0,0.28)] backdrop-blur-md">
+          <p className="text-center font-[family-name:var(--font-cormorant)] text-[clamp(0.95rem,2.5vh,1.35rem)] font-semibold tracking-[0.06em] text-[#FBF8F1]">
+            {slidePhotos[photoIndex].title}
+          </p>
+        </div>
       </div>
     </>
   ) : null}
