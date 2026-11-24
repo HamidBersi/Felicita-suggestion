@@ -199,7 +199,7 @@ export default function DisplayPage() {
   useEffect(() => {
     async function loadSuggestionsFromApi() {
       try {
-        const response = await fetch("/api/suggestions");
+        const response = await fetch("/api/suggestions", { cache: "no-store" });
 
         if (!response.ok) {
           setLoadState("error");
