@@ -3,7 +3,12 @@
 Logiciel utilisé **en production** par le restaurant La Félicità (Furdenheim, 67).
 
 Avant : menu imprimé, suggestions écrites à la main.  
-Aujourd’hui : l’équipe met à jour depuis un téléphone. L’écran en salle et le menu QR se mettent à jour en même temps. La carte papier se régénère à l’impression.
+Aujourd’hui : l’équipe met à jour depuis un téléphone. L’écran en salle, le menu QR et le site vitrine se mettent à jour ensemble. La carte papier se régénère à l’impression.
+
+Le site public du restaurant ([Feliccita-Site](https://github.com/HamidBersi/Feliccita-Site)) est branché ici.
+
+- Sa rubrique Suggestions ouvre le tableau en direct, le même que l’écran en salle.
+- Sa carte est la carte salle, lue sur `/api/menu`. Un plat, un prix ou une rupture modifié ici apparaît sur le site dans la minute. Un plat retiré n’y est plus listé.
 
 ![Tableau des suggestions en salle](docs/display.png)
 
