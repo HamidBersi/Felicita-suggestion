@@ -13,7 +13,7 @@ import { readStoredMenuLocale } from "@/components/menu/i18n";
 
 const MAX_DISPLAYED = 8;
 const MIN_SLIDESHOW_PHOTOS = 2;
-const TABLEAU_MS = 15_000;
+const TABLEAU_MS = 45_000;
 const PHOTO_MS = 7_000;
 const FADE_MS = 1_000;
 
